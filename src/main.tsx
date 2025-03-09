@@ -80,7 +80,7 @@ function Demo(): ReactElement {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
   const [current, setCurrent] = useState<TimePoint>(0);
-  const [content, setContent] = useState<string>(Content1);
+  const [content] = useState<string>(Content1);
 
   useEffect(() => {
     audioRef.current = audio;
