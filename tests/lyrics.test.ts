@@ -57,30 +57,30 @@ describe("test lyrics", () => {
     expect(l.lines[5][0]).toBe(16_730);
     expect(l.lines[5][1]).toBe(0);
 
-    const l1 = l.getLineByTimePoint(2_000);
+    const l1 = l.getLinesByTimePoint(2_000)[0];
     expect(l1?.[0]).toBe(0);
     expect(l1?.[1]).toBe(3_100);
     expect(l1?.[2][0][2]).toBe(" 谁のことを考えてるの?");
 
-    const l3 = l.getLineByTimePoint(6_000);
+    const l3 = l.getLinesByTimePoint(6_000)[0];
     expect(l3?.[0]).toBe(5_760);
     expect(l3?.[1]).toBe(10_560);
     expect(l3?.[2][0][2]).toBe(" 戦况的に 一进一退で");
 
-    const l6 = l.getLineByTimePoint(17_000);
+    const l6 = l.getLinesByTimePoint(17_000)[0];
     expect(l6?.[0]).toBe(16_730);
     expect(l6?.[1]).toBe(0);
     expect(l6?.[2][0][2]).toBe(" アイツの心に 居场所がないんだ");
 
-    expect(l.getLineIndexByTimePoint(2_000)).toBe(0);
-    expect(l.getLineIndexByTimePoint(17_000)).toBe(5);
+    expect(l.getLineIndexesByTimePoint(2_000)[0]).toBe(0);
+    expect(l.getLineIndexesByTimePoint(17_000)[0]).toBe(5);
 
-    expect(l.getLineStringByTimePoint(2_000)).toBe(" 谁のことを考えてるの?");
-    expect(l.getLineStringByTimePoint(17_000)).toBe(" アイツの心に 居场所がないんだ");
+    expect(l.getLineStringsByTimePoint(2_000)[0]).toBe(" 谁のことを考えてるの?");
+    expect(l.getLineStringsByTimePoint(17_000)[0]).toBe(" アイツの心に 居场所がないんだ");
 
-    expect(l.getLineIndexByTimePoint(-1)).toBe(-1);
-    expect(l.getLineIndexByTimePoint(-999)).toBe(-1);
-    expect(l.getLineIndexByTimePoint(999_999_999)).toBe(5);
+    expect(l.getLineIndexesByTimePoint(-1).length).toBe(0);
+    expect(l.getLineIndexesByTimePoint(-999).length).toBe(0);
+    expect(l.getLineIndexesByTimePoint(999_999_999)[0]).toBe(5);
   });
 
   test("parseLRC", () => {
@@ -90,11 +90,11 @@ describe("test lyrics", () => {
     expect(l1.lines[0][0]).toBe(12_000);
     expect(l1.lines[3][0]).toBe(45_100);
 
-    expect(l1.getLineIndexByTimePoint(13_000)).toBe(0);
-    expect(l1.getLineIndexByTimePoint(18_000)).toBe(1);
-    expect(l1.getLineIndexByTimePoint(22_000)).toBe(2);
-    expect(l1.getLineIndexByTimePoint(46_000)).toBe(3);
-    expect(l1.getLineIndexByTimePoint(50_000)).toBe(3);
+    expect(l1.getLineIndexesByTimePoint(13_000)[0]).toBe(0);
+    expect(l1.getLineIndexesByTimePoint(18_000)[0]).toBe(1);
+    expect(l1.getLineIndexesByTimePoint(22_000)[0]).toBe(2);
+    expect(l1.getLineIndexesByTimePoint(46_000)[0]).toBe(3);
+    expect(l1.getLineIndexesByTimePoint(50_000)[0]).toBe(3);
   })
 });
 

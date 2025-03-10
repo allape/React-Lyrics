@@ -2,26 +2,50 @@ export type Millisecond = number;
 export type TimePoint = Millisecond;
 export type Syllable = [TimePoint, TimePoint, string];
 export type Line = [TimePoint, TimePoint, Syllable[]];
+export type Progress = 0 | 1 | number;
 
 export default class Lyrics {
   public readonly lines: Line[] = [];
 
-  public getLineByTimePoint(tp: TimePoint): Line | null {
-    const index = this.getLineIndexByTimePoint(tp);
-    return index !== -1 ? this.lines[index] : null;
+  public getProgressesByTimePointInLine(
+    tp: TimePoint,
+    line: Line | number,
+  ): Progress[] {
+    if (typeof line === "number") {
+      line = this.lines[line];
+      if (!line) {
+        return [];
+      }
+    }
+
+    return line[2].map(([st, et]) => {
+      if (tp <= st) {
+        return 0;
+      } else if (tp >= et) {
+        return 1;
+      }
+
+      return (tp - st) / (et - st);
+    });
   }
 
-  public getLineIndexByTimePoint(tp: TimePoint): number {
-    return this.lines.findIndex(
-      (line) => line[0] <= tp && (line[1] === 0 || tp < line[1]),
-    );
+  public getLinesByTimePoint(tp: TimePoint): Line[] {
+    return this.getLineIndexesByTimePoint(tp).map((index) => this.lines[index]);
   }
 
-  public getLineStringByTimePoint(tp: TimePoint): string | null {
-    return (
-      this.getLineByTimePoint(tp)?.[2]
-        .map((i) => i[2])
-        .join("") ?? null
+  public getLineIndexesByTimePoint(tp: TimePoint): number[] {
+    const indexes: number[] = [];
+    this.lines.forEach((line, index) => {
+      if (line[0] <= tp && (line[1] === 0 || tp < line[1])) {
+        indexes.push(index);
+      }
+    });
+    return indexes;
+  }
+
+  public getLineStringsByTimePoint(tp: TimePoint): string[] {
+    return this.getLinesByTimePoint(tp).map((line) =>
+      line[2].map((i) => i[2]).join(""),
     );
   }
 

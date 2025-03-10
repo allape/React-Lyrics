@@ -1,4 +1,6 @@
 .wrapper {
+  overflow-x: hidden;
+
   .placeholder {
     height: 50dvh;
   }
@@ -8,22 +10,70 @@
 
     .line {
       text-align: center;
-      white-space: pre-wrap;
       word-break: break-word;
-      padding: 10px 0;
+      margin: 10px 0;
       font-size: 28px;
       cursor: pointer;
-      opacity: 0.6;
       transition: 0.25s;
       user-select: none;
 
       &:hover {
-        opacity: 0.8;
+        .syllable {
+          opacity: 0.8;
+        }
       }
 
       &.current {
         font-weight: bold;
-        opacity: 1;
+
+        .syllable {
+          opacity: 1 !important;
+        }
+      }
+
+      .syllable {
+        opacity: 0.4;
+        position: relative;
+
+        &:not(.karaoke) {
+          .truth {
+            color: #000;
+            @media (prefers-color-scheme: dark) {
+              color: #fff;
+            }
+          }
+        }
+
+        &.karaoke {
+          opacity: 0.8;
+
+          .truth {
+            opacity: 0.6;
+          }
+        }
+
+        .truth {
+          white-space: nowrap;
+          text-overflow: clip;
+          overflow: visible;
+        }
+
+        .mask {
+          position: absolute;
+          white-space: nowrap;
+          text-overflow: clip;
+          overflow: hidden;
+          text-align: left;
+          top: 0;
+          left: 0;
+          width: 0;
+          height: 100%;
+          transition: 0.1s;
+          color: #000;
+          @media (prefers-color-scheme: dark) {
+            color: #fff;
+          }
+        }
       }
     }
   }
