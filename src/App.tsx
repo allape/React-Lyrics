@@ -5,6 +5,7 @@ import styles from "./style.module.scss";
 
 export const InteractedThreshold: Millisecond = 1500;
 export const ScrollIntoThreshold: Millisecond = 200;
+export const KaraokeDelay: Millisecond = 100;
 
 export type LineIndex = number;
 
@@ -47,7 +48,8 @@ export default function App({
       return;
     }
 
-    const now: Millisecond = current * 1000 + offset;
+    const now: Millisecond =
+      current * 1000 + offset + (karaoke ? KaraokeDelay : 0);
 
     const indexes = lyricsDriver.getLineIndexesByTimePoint(now);
 
@@ -104,7 +106,7 @@ export default function App({
               indexes.includes(lineIndex) && styles.current,
             )}
             data-lyrics={`index-${lineIndex}`}
-            onClick={() => onChange?.((l[0] + offset) / 1000)}
+            onClick={() => onChange?.(l[0] + offset)}
           >
             {l[2].map((i, syllableIndex) => (
               <span
@@ -112,16 +114,18 @@ export default function App({
                 className={cls(styles.syllable, karaoke && styles.karaoke)}
               >
                 <span className={styles.truth}>{i[2]}</span>
-                <span
-                  className={styles.mask}
-                  style={{
-                    width: karaoke
-                      ? `${(progresses[lineIndex]?.[syllableIndex] || 0) * 100}%`
-                      : "100%",
-                  }}
-                >
-                  {i[2]}
-                </span>
+                {karaoke && (
+                  <span
+                    className={styles.mask}
+                    style={{
+                      width: karaoke
+                        ? `${(progresses[lineIndex]?.[syllableIndex] || 0) * 100}%`
+                        : "100%",
+                    }}
+                  >
+                    {i[2]}
+                  </span>
+                )}
               </span>
             ))}
           </div>

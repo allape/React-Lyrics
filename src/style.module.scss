@@ -31,6 +31,14 @@
         }
       }
 
+      &:not(.current) {
+        .syllable {
+          .mask {
+            display: none;
+          }
+        }
+      }
+
       .syllable {
         opacity: 0.4;
         position: relative;
@@ -42,36 +50,42 @@
               color: #fff;
             }
           }
+
+          .mask {
+            display: none;
+          }
         }
 
         &.karaoke {
           opacity: 0.8;
 
+          @mixin TextAlignment {
+            white-space: nowrap;
+            text-overflow: clip;
+            overflow: visible;
+            line-height: normal;
+            vertical-align: baseline;
+          }
+
           .truth {
+            @include TextAlignment;
             opacity: 0.6;
           }
-        }
 
-        .truth {
-          white-space: nowrap;
-          text-overflow: clip;
-          overflow: visible;
-        }
-
-        .mask {
-          position: absolute;
-          white-space: nowrap;
-          text-overflow: clip;
-          overflow: hidden;
-          text-align: left;
-          top: 0;
-          left: 0;
-          width: 0;
-          height: 100%;
-          transition: 0.1s;
-          color: #000;
-          @media (prefers-color-scheme: dark) {
-            color: #fff;
+          .mask {
+            @include TextAlignment;
+            overflow: hidden;
+            position: absolute;
+            text-align: left;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            transition: 0.3s;
+            color: #000;
+            @media (prefers-color-scheme: dark) {
+              color: #fff;
+            }
           }
         }
       }

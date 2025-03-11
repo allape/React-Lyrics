@@ -187,7 +187,7 @@ function Demo(): ReactElement {
       return;
     }
 
-    audioRef.current.currentTime = ct;
+    audioRef.current.currentTime = ct / 1000;
   }, []);
 
   const karaoke = useMemo(
