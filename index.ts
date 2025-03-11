@@ -1,1 +1,1 @@
-export { default as Lyrics } from "./src/App";
+export { default as Lyrics, type ILyricsProps } from "./src/component/Lyrics";

@@ -1,0 +1,59 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+
+  hr {
+    width: 100%;
+  }
+
+  .text {
+    resize: vertical;
+  }
+
+  .audio {
+    width: 100%;
+    position: sticky;
+    top: 10px;
+    left: 0;
+  }
+
+  .lines {
+    margin-top: 20px;
+
+    .line {
+      margin-bottom: 20px;
+
+      .syllable {
+        padding: 4px 6px;
+        margin-right: 10px;
+        border: 1px solid lightgray;
+        cursor: pointer;
+        user-select: none;
+        transition: 0.25s;
+
+        color: black;
+        background-color: white;
+        @media (prefers-color-scheme: dark) {
+          color: white;
+          background-color: black;
+        }
+
+        &.current {
+          outline: 2px solid skyblue;
+        }
+
+        &.filled {
+          color: white;
+          background-color: black;
+          @media (prefers-color-scheme: dark) {
+            color: black;
+            background-color: white;
+          }
+        }
+      }
+    }
+  }
+}

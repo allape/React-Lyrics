@@ -49,7 +49,7 @@ export default class Lyrics {
     );
   }
 
-  public toString(): string {
+  public save(): string {
     return this.lines
       .map((line) =>
         line[2]
@@ -60,6 +60,10 @@ export default class Lyrics {
           .join(""),
       )
       .join("\n");
+  }
+
+  public toString(): string {
+    return this.lines.map((l) => l[2].map((s) => s[2]).join("")).join("\n");
   }
 
   /**
