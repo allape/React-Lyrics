@@ -63,7 +63,14 @@ export default class Lyrics {
   }
 
   public toString(): string {
-    return this.lines.map((l) => l[2].map((s) => s[2]).join("")).join("\n");
+    return this.lines
+      .map((l) =>
+        l[2]
+          .map((s) => s[2])
+          .join("")
+          .trim(),
+      )
+      .join("\n");
   }
 
   /**
@@ -159,7 +166,7 @@ export default class Lyrics {
 
       const [full, st, syllable, et, nextSt] =
         line
-          .trimStart()
+          .trim()
           .match(
             /^(\[\d+:\d+(?:\.\d+)?])([^[]*)(\[\d+:\d+(?:\.\d+)?])?(\[\d+:\d+(?:\.\d+)?])?/,
           ) || [];
@@ -167,7 +174,14 @@ export default class Lyrics {
         break;
       }
 
-      line = line.substring(nextSt ? full.length - nextSt.length : full.length);
+      let cutIndex = full.length;
+      if (nextSt && et) {
+        cutIndex = full.length - nextSt.length;
+      } else if (!nextSt && et) {
+        cutIndex = full.length - et.length;
+      }
+
+      line = line.substring(cutIndex);
 
       const stp = this.fromStringTimePoint(st);
       if (isNaN(stp)) {

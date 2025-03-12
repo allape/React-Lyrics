@@ -5,6 +5,11 @@
   justify-content: flex-start;
   align-items: stretch;
 
+  color: black;
+  @media (prefers-color-scheme: dark) {
+    color: white;
+  }
+
   hr {
     width: 100%;
   }
@@ -21,7 +26,8 @@
   }
 
   .lines {
-    margin-top: 20px;
+    padding: 20px 10px;
+    margin: 0 -10px;
 
     .line {
       margin-bottom: 20px;
@@ -34,10 +40,8 @@
         user-select: none;
         transition: 0.25s;
 
-        color: black;
         background-color: white;
         @media (prefers-color-scheme: dark) {
-          color: white;
           background-color: black;
         }
 

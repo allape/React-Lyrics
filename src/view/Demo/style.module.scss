@@ -8,12 +8,21 @@
     color: white;
   }
 
+  @mixin Ghost {
+    transition: 0.2s;
+    opacity: 0.8;
+    &:hover {
+      opacity: 1;
+    }
+  }
+
   .audio {
     width: calc(100% - 20px);
     position: sticky;
     top: 10px;
     left: 10px;
     z-index: 1;
+    @include Ghost;
   }
 
   .selector {
@@ -22,5 +31,9 @@
     left: 10px;
     width: 100%;
     font-size: 24px;
+    z-index: 1;
+    cursor: pointer;
+    padding: 4px 6px;
+    @include Ghost;
   }
 }

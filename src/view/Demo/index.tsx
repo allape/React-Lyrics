@@ -1,14 +1,8 @@
-import {
-  ReactElement,
-  SyntheticEvent,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { ReactElement, useCallback, useMemo, useRef, useState } from "react";
 import Lyrics from "../../component/Lyrics";
 import { TimePoint } from "../../core/lyrics.ts";
 import { ILV } from "../../helper/lv.ts";
+import useRAFAudioTime from "../../hook/useRAFAudioTime.ts";
 import styles from "./style.module.scss";
 
 interface ILyricsLV extends ILV {
@@ -18,7 +12,7 @@ interface ILyricsLV extends ILV {
 const LyricsOptions: ILyricsLV[] = [
   {
     karaoke: false,
-    label: "Normal",
+    label: "Normal Mode",
     value: `
 [00:00.00] 谁のことを考えてるの?
 [00:03.10] ハートのスペース争夺戦
@@ -83,7 +77,7 @@ const LyricsOptions: ILyricsLV[] = [
   },
   {
     karaoke: true,
-    label: "Karaoke",
+    label: "Karaoke Mode",
     value: `
 [00:00.50] da [00:00.70]re [00:00.90]no [00:01.20]ko [00:01.35]to [00:01.50]wo [00:01.80]ka [00:01.90]n [00:02.15]ga [00:02.30]e [00:02.50]te [00:02.65]ru [00:02.80]no?
 [00:03.10] haato [00:03.70]no [00:03.80]supeesu [00:04.60]so [00:04.80]u [00:05.00]da [00:05.20]tsu [00:05.50]se [00:05.60]n
@@ -156,15 +150,8 @@ const LyricsOptions: ILyricsLV[] = [
 export default function Demo(): ReactElement {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const [current, setCurrent] = useState<TimePoint>(0);
+  const [current] = useRAFAudioTime(audioRef);
   const [content, setContent] = useState<string>(() => LyricsOptions[0].value);
-
-  const handleTimeUpdate = useCallback(
-    (e: SyntheticEvent<HTMLAudioElement>) => {
-      setCurrent(e.currentTarget.currentTime * 1000);
-    },
-    [],
-  );
 
   const handleChange = useCallback((ct: TimePoint) => {
     if (!audioRef.current) {
@@ -181,12 +168,7 @@ export default function Demo(): ReactElement {
 
   return (
     <div className={styles.wrapper}>
-      <audio
-        className={styles.audio}
-        ref={audioRef}
-        controls
-        onTimeUpdate={handleTimeUpdate}
-      >
+      <audio className={styles.audio} ref={audioRef} controls>
         <source
           src="https://guoyunhe.me/wp-content/uploads/2015/03/hao-gan-win-win-wu-tiao-jian.ogg"
           type="audio/ogg"

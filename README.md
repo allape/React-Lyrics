@@ -7,9 +7,9 @@ React Component for Making and Display Lyrics of A Song
 ## TODO
 
 - [x] Basic Mode
-- [ ] Karaoke Mode
-- [ ] Lyrics Editor
-- [ ] Apple Music Style
+- [x] Karaoke Mode
+- [x] Lyrics Editor
+- [ ] Apple Music Style (Almost)
 
 ### Installation
 
@@ -27,6 +27,10 @@ See [main.tsx](src/main.tsx).
 npm install
 npm run dev
 ```
+
+### File Format
+
+See [唐朝乐队 - 国际歌 / Tang Dynasty - L'Internationale](example/%E5%94%90%E6%9C%9D%E4%B9%90%E9%98%9F%20-%20%E5%9B%BD%E9%99%85%E6%AD%8C.lrcp) for example.
 
 # Credits
 

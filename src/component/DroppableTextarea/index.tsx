@@ -20,6 +20,7 @@ export default function DroppableTextarea({
       }
 
       e.preventDefault();
+      e.stopPropagation();
 
       const text = await file.text();
 

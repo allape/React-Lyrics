@@ -20,6 +20,12 @@
       &:hover {
         .syllable {
           opacity: 0.8;
+
+          &.karaoke {
+            .truth {
+              opacity: 0.8;
+            }
+          }
         }
       }
 
@@ -81,7 +87,6 @@
             left: 0;
             width: 0;
             height: 100%;
-            transition: 0.2s;
             color: #000;
             @media (prefers-color-scheme: dark) {
               color: #fff;

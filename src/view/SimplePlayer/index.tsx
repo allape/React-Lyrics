@@ -1,13 +1,14 @@
 import {
   ChangeEvent,
+  DragEvent,
   ReactElement,
-  useCallback, useEffect,
+  useCallback,
   useRef,
   useState,
-} from 'react';
-import { TimePoint } from "../../core/lyrics.ts";
+} from "react";
 import DroppableTextarea from "../../component/DroppableTextarea";
 import Lyrics from "../../component/Lyrics";
+import useRAFAudioTime from "../../hook/useRAFAudioTime.ts";
 import styles from "./style.module.scss";
 
 export interface ISimplePlayerProps {
@@ -19,41 +20,37 @@ export default function SimplePlayer({
   url: urlFromProps,
   content,
 }: ISimplePlayerProps): ReactElement {
-  const [url, setUrl] = useState<string | undefined>(urlFromProps);
-  const [text, setText] = useState<string | undefined>(content);
-  const [current, setCurrent] = useState<TimePoint>(0);
-
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handleChange = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
-    const ab = await e.currentTarget?.files?.[0]?.arrayBuffer();
-    if (e.target) {
-      e.target.value = "";
-    }
-    if (!ab) {
-      return;
-    }
+  const [url, setUrl] = useState<string | undefined>(urlFromProps);
+  const [text, setText] = useState<string | undefined>(content);
 
-    setUrl((old) => {
-      if (old?.startsWith("blob:")) {
-        URL.revokeObjectURL(old);
+  const [current] = useRAFAudioTime(audioRef);
+
+  const handleChange = useCallback(
+    async (e: ChangeEvent<HTMLInputElement> | DragEvent<HTMLElement>) => {
+      const files =
+        "dataTransfer" in e ? e.dataTransfer?.files : e.currentTarget?.files;
+      const ab = await files?.[0]?.arrayBuffer();
+
+      if (!ab) {
+        return;
       }
-      return URL.createObjectURL(new Blob([ab], { type: "audio/mpeg" }));
-    });
-  }, []);
 
-  const handleChangeTime = useCallback((tp: TimePoint) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = tp / 1000;
-    }
-  }, []);
+      e.preventDefault();
 
-  useEffect(() => {
-
-  }, []);
+      setUrl((old) => {
+        if (old?.startsWith("blob:")) {
+          URL.revokeObjectURL(old);
+        }
+        return URL.createObjectURL(new Blob([ab], { type: "audio/mpeg" }));
+      });
+    },
+    [],
+  );
 
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.wrapper} onDrop={handleChange}>
       <input type="file" onChange={handleChange} />
       <hr />
       <DroppableTextarea
@@ -64,19 +61,8 @@ export default function SimplePlayer({
         onChange={setText}
       ></DroppableTextarea>
       <hr />
-      <audio
-        ref={audioRef}
-        className={styles.audio}
-        src={url}
-        controls
-        onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime * 1000)}
-      ></audio>
-      <Lyrics
-        current={current}
-        content={text}
-        karaoke
-        onChange={handleChangeTime}
-      />
+      <audio ref={audioRef} className={styles.audio} src={url} controls></audio>
+      <Lyrics current={current} content={text} karaoke />
     </div>
   );
 }

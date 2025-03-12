@@ -14,7 +14,7 @@ import styles from "./style.module.scss";
 
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
-export const DefaultWordSplitterRegexp = /([\w']+\s+|.)/gi;
+export const DefaultWordSplitterRegexp = /([\w']+|\S)\s*/gi;
 
 export interface ILyricsEditorProps {
   onExport?: (
@@ -35,6 +35,8 @@ export default function LyricsEditor({
   const [lineIndex, lineIndexRef, setLineIndex] = useProxy<number>(0);
   const [syllableIndex, syllableIndexRef, setSyllableIndex] =
     useProxy<number>(0);
+
+  const [editor, setEditor] = useState<HTMLElement | null>(null);
 
   const fileNameRef = useRef<string | undefined>(undefined);
   const [audioURL, setAudioURL] = useState<string | undefined>(undefined);
@@ -115,7 +117,7 @@ export default function LyricsEditor({
       return;
     }
 
-    setLines(text.split("\n").map((i) => i.match(splitter) || [i], []));
+    setLines(text.split("\n").map((i) => i.trim().match(splitter) || [i], []));
   }, [setLineIndex, setLines, setSyllableIndex, text, wordSplitterRegexp]);
 
   const handleSeek = useCallback((duration: Millisecond) => {
@@ -126,7 +128,54 @@ export default function LyricsEditor({
     audioRef.current.currentTime = nextTime < 0 ? 0 : nextTime;
   }, []);
 
+  const handleExport = useCallback(() => {
+    if (!linesRef.current.length) {
+      alert("No lyrics to export");
+      return;
+    }
+
+    const lyrics = linesRef.current
+      .map((line, index) => {
+        const timePoints = timePointsRef.current[index];
+        if (!timePoints) {
+          return line.join("");
+        }
+
+        const tps = Object.entries(timePoints);
+        const syllables: string[] = [];
+        for (let i = 0; i < line.length; i++) {
+          let syllable = line[i];
+          const st = Lyrics.toStringTimePoint(tps[i][1][0]);
+          const et = Lyrics.toStringTimePoint(tps[i][1][1]);
+          if (i === tps.length - 1) {
+            syllable = line.slice(i).join("");
+            i = line.length;
+          }
+          syllables.push(`${st}${syllable}${et}`);
+        }
+
+        return syllables.join("");
+      })
+      .join("\n");
+
+    if (onExport) {
+      onExport(lyrics, linesRef.current, timePointsRef.current);
+    } else {
+      const blob = new Blob([lyrics], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fileNameRef.current || "lyrics"}.lrc`;
+      a.click();
+      a.remove();
+    }
+  }, [linesRef, onExport]);
+
   useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
     let keyDownTime: Millisecond = 0;
     let isKeyDown = false;
 
@@ -149,10 +198,12 @@ export default function LyricsEditor({
 
         case "ArrowLeft":
           handleSeek(-3_000);
+          setSyllableIndex(0);
           touched = true;
           break;
         case "ArrowUp":
           handleSeek(-10_000);
+          setSyllableIndex(0);
           touched = true;
           break;
 
@@ -161,8 +212,8 @@ export default function LyricsEditor({
           if (!isKeyDown) {
             isKeyDown = true;
             keyDownTime = audioRef.current.currentTime * 1000;
-            touched = true;
           }
+          touched = true;
           break;
       }
 
@@ -215,11 +266,11 @@ export default function LyricsEditor({
         });
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    editor.addEventListener("keydown", handleKeyDown);
+    editor.addEventListener("keyup", handleKeyUp);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
+      editor.removeEventListener("keydown", handleKeyDown);
+      editor.removeEventListener("keyup", handleKeyUp);
     };
   }, [
     handleSeek,
@@ -228,59 +279,20 @@ export default function LyricsEditor({
     setLineIndex,
     setSyllableIndex,
     syllableIndexRef,
+    editor,
   ]);
-
-  const handleExport = useCallback(() => {
-    const lyrics = linesRef.current
-      .map((line, index) => {
-        const timePoints = timePointsRef.current[index];
-        if (!timePoints) {
-          return line.join("");
-        }
-
-        const tps = Object.entries(timePoints);
-        const syllables: string[] = [];
-        for (let i = 0; i < line.length; i++) {
-          let syllable = line[i];
-          const st = Lyrics.toStringTimePoint(tps[i][1][0]);
-          const et = Lyrics.toStringTimePoint(tps[i][1][1]);
-          if (i === tps.length - 1) {
-            syllable = line.slice(i).join("");
-            i = line.length;
-          }
-          syllables.push(`${st}${syllable}${et}`);
-        }
-
-        return syllables.join("");
-      })
-      .join("\n");
-
-    if (onExport) {
-      onExport(lyrics, linesRef.current, timePointsRef.current);
-    } else {
-      const blob = new Blob([lyrics], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${fileNameRef.current || "lyrics"}.lrc`;
-      a.click();
-      a.remove();
-    }
-  }, [linesRef, onExport]);
 
   return (
     <div className={styles.wrapper}>
-      <input
-        type="file"
-        placeholder="Select the music"
-        onChange={handleFileChange}
-      />
+      <input type="file" onChange={handleFileChange} />
+      <hr />
       <input
         type="text"
         placeholder="Word split RegExp"
         value={wordSplitterRegexp}
         onChange={(e) => setWordSplitterRegexp(e.target.value)}
       />
+      <hr />
       <textarea
         className={styles.text}
         onDrop={handleDropLRCFile}
@@ -297,7 +309,10 @@ export default function LyricsEditor({
         src={audioURL}
         controls
       ></audio>
-      <div className={styles.lines}>
+      <hr />
+      <p>Try with Arrow Keys, you will figure it out :)</p>
+      <hr />
+      <div className={styles.lines} tabIndex={0} ref={setEditor}>
         {lines.map((line, li) => {
           return (
             <div key={li} className={styles.line} data-line={`index-${li}`}>
