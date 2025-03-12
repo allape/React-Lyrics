@@ -1,0 +1,30 @@
+.wrapper {
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+
+  color: black;
+  background-color: white;
+  @media (prefers-color-scheme: dark) {
+    color: white;
+    background-color: black;
+  }
+
+  hr {
+    width: 100%;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  .audio {
+    width: 100%;
+    position: sticky;
+    top: 10px;
+    left: 0;
+  }
+}

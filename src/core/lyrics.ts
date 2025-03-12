@@ -97,7 +97,7 @@ export default class Lyrics {
    * https://en.wikipedia.org/wiki/LRC_(file_format)
    * @param text LRC format text with word by word timestamp
    * ```
-   * [00:00.00]Ly[00:00.20]ri[00:00.30]cs[00:00.40]
+   * [00:00.00]Ly[00:00.20][00:00.21]ri[00:00.30][00:00.31]cs[00:00.40]
    * [00:00.00]歌[00:00.20]词[00:00.30]
    * ```
    */
@@ -157,27 +157,33 @@ export default class Lyrics {
         break;
       }
 
-      const [full, st, syllable] =
-        line.trimStart().match(/^(\[\d+:\d+(?:\.\d+)?])([^[]*)/) || [];
+      const [full, st, syllable, et, nextSt] =
+        line
+          .trimStart()
+          .match(
+            /^(\[\d+:\d+(?:\.\d+)?])([^[]*)(\[\d+:\d+(?:\.\d+)?])?(\[\d+:\d+(?:\.\d+)?])?/,
+          ) || [];
       if (!full || !st) {
         break;
       }
 
-      line = line.substring(full.length);
+      line = line.substring(nextSt ? full.length - nextSt.length : full.length);
 
       const stp = this.fromStringTimePoint(st);
       if (isNaN(stp)) {
         continue;
       }
 
+      const etp = this.fromStringTimePoint(et);
+
       // use the start time point of current syllable to fill the end time of the prev syllable
       const prevSyllable = syllables[syllables.length - 1];
-      if (prevSyllable) {
+      if (prevSyllable && !prevSyllable[1]) {
         prevSyllable[1] = stp;
       }
 
       if (syllable) {
-        syllables.push([stp, 0, syllable]);
+        syllables.push([stp, etp || 0, syllable]);
       }
     }
 

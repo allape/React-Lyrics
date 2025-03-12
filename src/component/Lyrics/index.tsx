@@ -52,8 +52,7 @@ export default function Lyrics({
       return;
     }
 
-    const now: Millisecond =
-      current * 1000 + offset + (karaoke ? KaraokeDelay : 0);
+    const now: Millisecond = current + offset + (karaoke ? KaraokeDelay : 0);
 
     const indexes = lyricsDriver.getLineIndexesByTimePoint(now);
 

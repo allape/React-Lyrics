@@ -12,11 +12,21 @@ import {
 import Lyrics, { Millisecond, TimePoint } from "../../core/lyrics.ts";
 import styles from "./style.module.scss";
 
-export const DefaultWordSplitterRegexp = /([\w']+|.)/gi;
+export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
-export interface ILyricsEditorProps {}
+export const DefaultWordSplitterRegexp = /([\w']+\s+|.)/gi;
 
-export default function LyricsEditor({}: ILyricsEditorProps): ReactElement {
+export interface ILyricsEditorProps {
+  onExport?: (
+    lyrics: string,
+    lines: string[][],
+    timePoints: TimePoints,
+  ) => void;
+}
+
+export default function LyricsEditor({
+  onExport,
+}: ILyricsEditorProps): ReactElement {
   const [text, setText] = useState<string>("");
   const [wordSplitterRegexp, setWordSplitterRegexp] = useState<string>(
     () => DefaultWordSplitterRegexp.source,
@@ -25,14 +35,13 @@ export default function LyricsEditor({}: ILyricsEditorProps): ReactElement {
   const [lineIndex, lineIndexRef, setLineIndex] = useProxy<number>(0);
   const [syllableIndex, syllableIndexRef, setSyllableIndex] =
     useProxy<number>(0);
+
+  const fileNameRef = useRef<string | undefined>(undefined);
   const [audioURL, setAudioURL] = useState<string | undefined>(undefined);
-  const [current, currentRef, setCurrent] = useProxy<TimePoint>(0);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const timePointsRef = useRef<
-    Record<number, Record<number, [TimePoint, TimePoint]>>
-  >({});
+  const timePointsRef = useRef<TimePoints>({});
 
   const handleDropLRCFile = useCallback(
     async (e: DragEvent<HTMLTextAreaElement>) => {
@@ -54,17 +63,27 @@ export default function LyricsEditor({}: ILyricsEditorProps): ReactElement {
   );
 
   const handleFileChange = useCallback(
-    async (e: ChangeEvent<HTMLInputElement>) => {
-      const blob = await e.currentTarget.files?.[0]?.arrayBuffer();
-      e.target.value = "";
-      if (!blob) {
+    async (e: ChangeEvent<HTMLInputElement> | DragEvent<HTMLAudioElement>) => {
+      const files =
+        "dataTransfer" in e ? e.dataTransfer?.files : e.currentTarget?.files;
+
+      fileNameRef.current = files?.[0]?.name;
+
+      const ab = await files?.[0]?.arrayBuffer();
+
+      if (!ab) {
         return;
       }
+
+      e.preventDefault();
+
+      if ("value" in e.target) e.target.value = "";
+
       setAudioURL((old) => {
         if (old?.startsWith("blob:")) {
           URL.revokeObjectURL(old);
         }
-        return URL.createObjectURL(new Blob([blob], { type: "audio/mpeg" }));
+        return URL.createObjectURL(new Blob([ab], { type: "audio/mpeg" }));
       });
     },
     [],
@@ -96,38 +115,65 @@ export default function LyricsEditor({}: ILyricsEditorProps): ReactElement {
       return;
     }
 
-    setLines(
-      text.split("\n").map(
-        (i) =>
-          i
-            .trim()
-            .split(" ")
-            .map((i) => i.match(splitter) || [i])
-            .reduce((p, c) => [...p, ...c]),
-        [],
-      ),
-    );
+    setLines(text.split("\n").map((i) => i.match(splitter) || [i], []));
   }, [setLineIndex, setLines, setSyllableIndex, text, wordSplitterRegexp]);
+
+  const handleSeek = useCallback((duration: Millisecond) => {
+    if (!audioRef.current) {
+      return;
+    }
+    const nextTime = audioRef.current.currentTime + duration / 1000;
+    audioRef.current.currentTime = nextTime < 0 ? 0 : nextTime;
+  }, []);
 
   useEffect(() => {
     let keyDownTime: Millisecond = 0;
     let isKeyDown = false;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
 
-      if (isKeyDown || !audioRef.current || audioRef.current.paused) {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!audioRef.current) {
         return;
       }
 
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-        isKeyDown = true;
-        keyDownTime = currentRef.current * 1000;
+      let touched = false;
+
+      switch (e.key) {
+        case " ":
+          if (audioRef.current.paused) {
+            audioRef.current.play().then();
+          } else {
+            audioRef.current.pause();
+          }
+          touched = true;
+          break;
+
+        case "ArrowLeft":
+          handleSeek(-3_000);
+          touched = true;
+          break;
+        case "ArrowUp":
+          handleSeek(-10_000);
+          touched = true;
+          break;
+
+        case "ArrowRight":
+        case "ArrowDown":
+          if (!isKeyDown) {
+            isKeyDown = true;
+            keyDownTime = audioRef.current.currentTime * 1000;
+            touched = true;
+          }
+          break;
+      }
+
+      if (touched) {
+        e.preventDefault();
+        e.stopPropagation();
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (!isKeyDown) {
+      if (!isKeyDown || !audioRef.current) {
         return;
       }
 
@@ -135,7 +181,10 @@ export default function LyricsEditor({}: ILyricsEditorProps): ReactElement {
 
       timePointsRef.current[lineIndexRef.current] = {
         ...timePointsRef.current[lineIndexRef.current],
-        [syllableIndexRef.current]: [keyDownTime, currentRef.current * 1000],
+        [syllableIndexRef.current]: [
+          keyDownTime,
+          audioRef.current.currentTime * 1000,
+        ],
       };
 
       if (lineIndexRef.current >= linesRef.current.length) {
@@ -173,13 +222,51 @@ export default function LyricsEditor({}: ILyricsEditorProps): ReactElement {
       window.removeEventListener("keyup", handleKeyUp);
     };
   }, [
-    currentRef,
+    handleSeek,
     lineIndexRef,
     linesRef,
     setLineIndex,
     setSyllableIndex,
     syllableIndexRef,
   ]);
+
+  const handleExport = useCallback(() => {
+    const lyrics = linesRef.current
+      .map((line, index) => {
+        const timePoints = timePointsRef.current[index];
+        if (!timePoints) {
+          return line.join("");
+        }
+
+        const tps = Object.entries(timePoints);
+        const syllables: string[] = [];
+        for (let i = 0; i < line.length; i++) {
+          let syllable = line[i];
+          const st = Lyrics.toStringTimePoint(tps[i][1][0]);
+          const et = Lyrics.toStringTimePoint(tps[i][1][1]);
+          if (i === tps.length - 1) {
+            syllable = line.slice(i).join("");
+            i = line.length;
+          }
+          syllables.push(`${st}${syllable}${et}`);
+        }
+
+        return syllables.join("");
+      })
+      .join("\n");
+
+    if (onExport) {
+      onExport(lyrics, linesRef.current, timePointsRef.current);
+    } else {
+      const blob = new Blob([lyrics], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fileNameRef.current || "lyrics"}.lrc`;
+      a.click();
+      a.remove();
+    }
+  }, [linesRef, onExport]);
 
   return (
     <div className={styles.wrapper}>
@@ -205,10 +292,10 @@ export default function LyricsEditor({}: ILyricsEditorProps): ReactElement {
       <hr />
       <audio
         ref={audioRef}
+        onDrop={handleFileChange}
         className={styles.audio}
         src={audioURL}
         controls
-        onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime * 1000)}
       ></audio>
       <div className={styles.lines}>
         {lines.map((line, li) => {
@@ -232,13 +319,16 @@ export default function LyricsEditor({}: ILyricsEditorProps): ReactElement {
                         styles.current,
                     )}
                   >
-                    {syllable}
+                    {syllable.trim()}
                   </span>
                 );
               })}
             </div>
           );
         })}
+      </div>
+      <div className={styles.buttons}>
+        <button onClick={handleExport}>Export</button>
       </div>
     </div>
   );

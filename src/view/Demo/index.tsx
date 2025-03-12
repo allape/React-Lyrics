@@ -1,7 +1,7 @@
 import {
   ReactElement,
+  SyntheticEvent,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -153,28 +153,18 @@ const LyricsOptions: ILyricsLV[] = [
   },
 ];
 
-export default function Displayer(): ReactElement {
+export default function Demo(): ReactElement {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
   const [current, setCurrent] = useState<TimePoint>(0);
   const [content, setContent] = useState<string>(() => LyricsOptions[0].value);
 
-  useEffect(() => {
-    audioRef.current = audio;
-    if (!audio) {
-      return;
-    }
-
-    const handleTimeUpdate = () => {
-      setCurrent(audio.currentTime);
-    };
-
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    return () => {
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-    };
-  }, [audio]);
+  const handleTimeUpdate = useCallback(
+    (e: SyntheticEvent<HTMLAudioElement>) => {
+      setCurrent(e.currentTarget.currentTime * 1000);
+    },
+    [],
+  );
 
   const handleChange = useCallback((ct: TimePoint) => {
     if (!audioRef.current) {
@@ -191,7 +181,12 @@ export default function Displayer(): ReactElement {
 
   return (
     <div className={styles.wrapper}>
-      <audio className={styles.audio} ref={setAudio} controls>
+      <audio
+        className={styles.audio}
+        ref={audioRef}
+        controls
+        onTimeUpdate={handleTimeUpdate}
+      >
         <source
           src="https://guoyunhe.me/wp-content/uploads/2015/03/hao-gan-win-win-wu-tiao-jian.ogg"
           type="audio/ogg"

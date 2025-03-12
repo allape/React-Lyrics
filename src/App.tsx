@@ -1,10 +1,11 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 import LyricsEditor from "./component/LyricsEditor";
+import SimplePlayer from "./view/SimplePlayer";
 import { ILV } from "./helper/lv.ts";
 import styles from "./style.module.scss";
-import Displayer from "./view/Displayer";
+import Displayer from "./view/Demo";
 
-type Route = "lyrics" | "lyrics-editor";
+type Route = "lyrics" | "lyrics-editor" | "simple-player";
 
 const Routers: ILV<Route>[] = [
   {
@@ -14,6 +15,10 @@ const Routers: ILV<Route>[] = [
   {
     label: "Lyrics Editor",
     value: "lyrics-editor",
+  },
+  {
+    label: "Simple Player",
+    value: "simple-player",
   },
 ];
 
@@ -54,6 +59,7 @@ export default function App(): ReactElement {
       <div className={styles.slot}>
         {route === "lyrics" && <Displayer />}
         {route === "lyrics-editor" && <LyricsEditor />}
+        {route === "simple-player" && <SimplePlayer />}
       </div>
     </div>
   );
