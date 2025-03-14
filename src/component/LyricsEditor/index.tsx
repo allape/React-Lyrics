@@ -14,7 +14,7 @@ import styles from "./style.module.scss";
 
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
-export const DefaultWordSplitterRegexp = /([\w']+|\S)\s*/gi;
+export const DefaultWordSplitterRegexp = /([\w'?]+|\S)\s*/gi;
 
 export interface ILyricsEditorProps {
   onExport?: (
