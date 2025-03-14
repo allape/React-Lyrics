@@ -29,6 +29,10 @@
     padding: 20px 10px;
     margin: 0 -10px;
 
+    &:focus {
+      outline: skyblue auto 2px;
+    }
+
     .line {
       margin-bottom: 20px;
 
@@ -46,7 +50,7 @@
         }
 
         &.current {
-          outline: 2px solid skyblue;
+          outline: 2px auto skyblue;
         }
 
         &.filled {

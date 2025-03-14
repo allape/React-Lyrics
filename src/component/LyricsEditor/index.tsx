@@ -14,7 +14,7 @@ import styles from "./style.module.scss";
 
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
-export const DefaultWordSplitterRegexp = /([\w'?]+|\S)\s*/gi;
+export const DefaultWordSplitterRegexp = /([\w'?.]+|\S[。，]?)\s*/gi;
 
 export interface ILyricsEditorProps {
   onExport?: (
@@ -64,19 +64,13 @@ export default function LyricsEditor({
     [],
   );
 
-  const lastDriverReloadedTime = useRef<number>(0);
-
   useEffect(() => {
-    if (performance.now() - lastDriverReloadedTime.current < 1000) {
-      return;
-    }
-
-    lastDriverReloadedTime.current = performance.now();
-
     timePointsRef.current = [];
+
     setLineIndex(0);
     setSyllableIndex(0);
     setLines([]);
+
     if (!text) {
       return;
     }
@@ -140,6 +134,12 @@ export default function LyricsEditor({
     if (onExport) {
       onExport(lyrics, linesRef.current, timePointsRef.current);
     } else {
+      let filename = `${fileNameRef.current || "lyrics"}.lrcp`;
+      filename = window.prompt("Filename", filename) || filename;
+      if (!filename) {
+        console.log("No filename, export cancelled");
+        return;
+      }
       const blob = new Blob([lyrics], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -290,7 +290,12 @@ export default function LyricsEditor({
       <hr />
       <p>Try with Arrow Keys, you will figure it out :)</p>
       <hr />
-      <div className={styles.lines} tabIndex={0} ref={setEditor}>
+      <div
+        className={styles.lines}
+        tabIndex={0}
+        ref={setEditor}
+        onClick={(e) => e.currentTarget.focus()}
+      >
         {lines.map((line, li) => {
           return (
             <div key={li} className={styles.line} data-line={`index-${li}`}>
