@@ -1,5 +1,12 @@
 import cls from "classnames";
-import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
+import {
+  CSSProperties,
+  ReactElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import LyricsDriver, {
   Millisecond,
   Progress,
@@ -9,7 +16,7 @@ import styles from "./style.module.scss";
 
 export const InteractedThreshold: Millisecond = 1500;
 export const ScrollIntoThreshold: Millisecond = 200;
-export const KaraokeDelay: Millisecond = 100;
+export const KaraokeDelay: Millisecond = 100; // human delay
 
 export type LineIndex = number;
 
@@ -18,6 +25,7 @@ export interface ILyricsProps {
   current?: Millisecond;
   karaoke?: boolean;
   content?: string;
+  styles?: Partial<Record<"line" | "syllable" | "mask", CSSProperties>>;
   onChange?: (tp: TimePoint) => void;
 }
 
@@ -26,6 +34,7 @@ export default function Lyrics({
   current = 0,
   karaoke,
   content,
+  styles: stylesFromProps,
   onChange,
 }: ILyricsProps): ReactElement {
   const lastInteractTime = useRef<number>(0);
@@ -110,17 +119,24 @@ export default function Lyrics({
             )}
             data-lyrics={`index-${lineIndex}`}
             onClick={() => onChange?.(l[0] + offset)}
+            style={stylesFromProps?.line}
           >
             {l[2].map((i, syllableIndex) => (
               <span
                 key={`line${lineIndex}_s${syllableIndex}`}
                 className={cls(styles.syllable, karaoke && styles.karaoke)}
               >
-                <span className={styles.truth}>{i[2]}</span>
+                <span
+                  className={styles.truth}
+                  style={stylesFromProps?.syllable}
+                >
+                  {i[2]}
+                </span>
                 {karaoke && (
                   <span
                     className={styles.mask}
                     style={{
+                      ...stylesFromProps?.mask,
                       width: karaoke
                         ? `${(progresses[lineIndex]?.[syllableIndex] || 0) * 100}%`
                         : "100%",
