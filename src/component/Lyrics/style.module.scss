@@ -30,12 +30,10 @@
       }
 
       &.current {
+        font-weight: bold;
+
         .syllable {
           opacity: 1 !important;
-
-          .mask {
-            font-weight: bold;
-          }
         }
       }
 
