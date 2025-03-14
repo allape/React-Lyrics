@@ -1,12 +1,6 @@
-import {
-  ChangeEvent,
-  DragEvent,
-  ReactElement,
-  useCallback,
-  useRef,
-  useState,
-} from "react";
+import { ReactElement, useRef, useState } from "react";
 import DroppableTextarea from "../../component/DroppableTextarea";
+import FileInput from "../../component/FileInput";
 import Lyrics from "../../component/Lyrics";
 import useRAFAudioTime from "../../hook/useRAFAudioTime.ts";
 import styles from "./style.module.scss";
@@ -27,31 +21,9 @@ export default function SimplePlayer({
 
   const [current] = useRAFAudioTime(audioRef);
 
-  const handleChange = useCallback(
-    async (e: ChangeEvent<HTMLInputElement> | DragEvent<HTMLElement>) => {
-      const files =
-        "dataTransfer" in e ? e.dataTransfer?.files : e.currentTarget?.files;
-      const ab = await files?.[0]?.arrayBuffer();
-
-      if (!ab) {
-        return;
-      }
-
-      e.preventDefault();
-
-      setUrl((old) => {
-        if (old?.startsWith("blob:")) {
-          URL.revokeObjectURL(old);
-        }
-        return URL.createObjectURL(new Blob([ab], { type: "audio/mpeg" }));
-      });
-    },
-    [],
-  );
-
   return (
-    <div className={styles.wrapper} onDrop={handleChange}>
-      <input type="file" onChange={handleChange} />
+    <div className={styles.wrapper}>
+      <FileInput value={url} onChange={setUrl} />
       <hr />
       <DroppableTextarea
         className={styles.text}

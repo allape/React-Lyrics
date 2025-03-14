@@ -1,7 +1,6 @@
 import { useProxy } from "@allape/use-loading";
 import cls from "classnames";
 import {
-  ChangeEvent,
   DragEvent,
   ReactElement,
   useCallback,
@@ -10,6 +9,7 @@ import {
   useState,
 } from "react";
 import Lyrics, { Millisecond, TimePoint } from "../../core/lyrics.ts";
+import FileInput from "../FileInput";
 import styles from "./style.module.scss";
 
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
@@ -64,33 +64,6 @@ export default function LyricsEditor({
     [],
   );
 
-  const handleFileChange = useCallback(
-    async (e: ChangeEvent<HTMLInputElement> | DragEvent<HTMLAudioElement>) => {
-      const files =
-        "dataTransfer" in e ? e.dataTransfer?.files : e.currentTarget?.files;
-
-      fileNameRef.current = files?.[0]?.name;
-
-      const ab = await files?.[0]?.arrayBuffer();
-
-      if (!ab) {
-        return;
-      }
-
-      e.preventDefault();
-
-      if ("value" in e.target) e.target.value = "";
-
-      setAudioURL((old) => {
-        if (old?.startsWith("blob:")) {
-          URL.revokeObjectURL(old);
-        }
-        return URL.createObjectURL(new Blob([ab], { type: "audio/mpeg" }));
-      });
-    },
-    [],
-  );
-
   const lastDriverReloadedTime = useRef<number>(0);
 
   useEffect(() => {
@@ -108,6 +81,12 @@ export default function LyricsEditor({
       return;
     }
 
+    let t = text;
+    if (/\[\d+:\d+(?:\.\d+)?]/gi.test(t)) {
+      const lrc = Lyrics.parseStandardLRC(t);
+      t = lrc.toString();
+    }
+
     let splitter = DefaultWordSplitterRegexp;
 
     try {
@@ -117,7 +96,7 @@ export default function LyricsEditor({
       return;
     }
 
-    setLines(text.split("\n").map((i) => i.trim().match(splitter) || [i], []));
+    setLines(t.split("\n").map((i) => i.trim().match(splitter) || [i], []));
   }, [setLineIndex, setLines, setSyllableIndex, text, wordSplitterRegexp]);
 
   const handleSeek = useCallback((duration: Millisecond) => {
@@ -165,7 +144,7 @@ export default function LyricsEditor({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${fileNameRef.current || "lyrics"}.lrc`;
+      a.download = `${fileNameRef.current || "lyrics"}.lrcp`;
       a.click();
       a.remove();
     }
@@ -284,7 +263,7 @@ export default function LyricsEditor({
 
   return (
     <div className={styles.wrapper}>
-      <input type="file" onChange={handleFileChange} />
+      <FileInput value={audioURL} onChange={setAudioURL} />
       <hr />
       <input
         type="text"
@@ -304,7 +283,6 @@ export default function LyricsEditor({
       <hr />
       <audio
         ref={audioRef}
-        onDrop={handleFileChange}
         className={styles.audio}
         src={audioURL}
         controls
