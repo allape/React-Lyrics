@@ -1,4 +1,5 @@
 export { default as LyricsDriver } from "./src/core/lyrics";
+export type * from "./src/core/lyrics";
 
 export { default as Lyrics, type ILyricsProps } from "./src/component/Lyrics";
 
