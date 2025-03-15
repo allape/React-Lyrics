@@ -67,6 +67,7 @@ export default function FileInput({
   return (
     <>
       <input
+        placeholder="Input URL or drop file here"
         {...props}
         value={text}
         onBlur={handleBlur}

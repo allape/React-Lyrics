@@ -53,7 +53,9 @@ export default function Lyrics({
       setLyricsDriver(null);
       return;
     }
-    setLyricsDriver(LyricsDriver.parse(content));
+    const driver = LyricsDriver.parse(content);
+    driver.insertStartIndicator();
+    setLyricsDriver(driver);
   }, [content]);
 
   useEffect(() => {

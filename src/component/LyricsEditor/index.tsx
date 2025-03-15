@@ -14,7 +14,7 @@ import styles from "./style.module.scss";
 
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
-export const DefaultWordSplitterRegexp = /([\w'?.]+|\S[。，]?)\s*/gi;
+export const DefaultWordSplitterRegexp = /([\w'?,;.]+|\S[。，]?)\s*/gi;
 
 export interface ILyricsEditorProps {
   onExport?: (
@@ -90,7 +90,12 @@ export default function LyricsEditor({
       return;
     }
 
-    setLines(t.split("\n").map((i) => i.trim().match(splitter) || [i], []));
+    setLines(
+      t
+        .split("\n")
+        .filter((i) => !!i.trim())
+        .map((i) => i.trim().match(splitter) || [i], []),
+    );
   }, [setLineIndex, setLines, setSyllableIndex, text, wordSplitterRegexp]);
 
   const handleSeek = useCallback((duration: Millisecond) => {
@@ -150,6 +155,18 @@ export default function LyricsEditor({
     }
   }, [linesRef, onExport]);
 
+  const handleTogglePlay = useCallback(() => {
+    if (!audioRef.current) {
+      return;
+    }
+
+    if (audioRef.current.paused) {
+      audioRef.current.play().then();
+    } else {
+      audioRef.current.pause();
+    }
+  }, []);
+
   useEffect(() => {
     if (!editor) {
       return;
@@ -165,35 +182,67 @@ export default function LyricsEditor({
 
       let touched = false;
 
-      switch (e.key) {
-        case " ":
-          if (audioRef.current.paused) {
-            audioRef.current.play().then();
-          } else {
-            audioRef.current.pause();
-          }
-          touched = true;
-          break;
+      if (e.shiftKey) {
+        switch (e.key) {
+          case " ":
+            handleTogglePlay();
+            touched = true;
+            break;
+          case "ArrowLeft":
+            handleSeek(-3_000);
+            touched = true;
+            break;
+          case "ArrowUp":
+            handleSeek(-10_000);
+            touched = true;
+            break;
 
-        case "ArrowLeft":
-          handleSeek(-3_000);
-          setSyllableIndex(0);
-          touched = true;
-          break;
-        case "ArrowUp":
-          handleSeek(-10_000);
-          setSyllableIndex(0);
-          touched = true;
-          break;
+          case "ArrowRight":
+            handleSeek(3_000);
+            touched = true;
+            break;
+          case "ArrowDown":
+            if (!isKeyDown) {
+              handleSeek(10_000);
+              touched = true;
+              break;
+            }
+        }
+      } else {
+        switch (e.key) {
+          case " ":
+            handleTogglePlay();
+            touched = true;
+            break;
+          case "ArrowLeft":
+            timePointsRef.current[lineIndexRef.current] = {};
+            handleSeek(-3_000);
+            setSyllableIndex(0);
+            touched = true;
+            break;
+          case "ArrowUp":
+            timePointsRef.current[lineIndexRef.current] = {};
+            setSyllableIndex(0);
+            setLineIndex((i) => {
+              i = i - 1;
+              if (i < 0) {
+                i = 0;
+              }
+              timePointsRef.current[i] = {};
+              return i;
+            });
+            touched = true;
+            break;
 
-        case "ArrowRight":
-        case "ArrowDown":
-          if (!isKeyDown) {
-            isKeyDown = true;
-            keyDownTime = audioRef.current.currentTime * 1000;
-          }
-          touched = true;
-          break;
+          case "ArrowRight":
+          case "ArrowDown":
+            if (!isKeyDown) {
+              isKeyDown = true;
+              keyDownTime = audioRef.current.currentTime * 1000;
+            }
+            touched = true;
+            break;
+        }
       }
 
       if (touched) {
@@ -259,6 +308,7 @@ export default function LyricsEditor({
     setSyllableIndex,
     syllableIndexRef,
     editor,
+    handleTogglePlay,
   ]);
 
   return (
@@ -288,7 +338,8 @@ export default function LyricsEditor({
         controls
       ></audio>
       <hr />
-      <p>Try with Arrow Keys, you will figure it out :)</p>
+      <p>[Space] to toggle player, [Shift] + [Arrow Keys] to seek player;</p>
+      <p>Hold [Arrow Keys] to start recording syllable.</p>
       <hr />
       <div
         className={styles.lines}

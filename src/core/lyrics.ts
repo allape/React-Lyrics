@@ -29,6 +29,52 @@ export default class Lyrics {
     });
   }
 
+  public insertStartIndicator(
+    gap: Millisecond = 5_000,
+    indicators: string[] = ["⬤ ", " ⬤ ", " ⬤"],
+  ): Line[] {
+    const indicatorsDuration = indicators.length * 1000;
+    if (indicatorsDuration > gap) {
+      throw new Error("Indicator length should be less than gap / 1000");
+    }
+
+    const newLines: typeof this.lines = [];
+
+    for (let i = 0; i < this.lines.length; i++) {
+      const cLine = this.lines[i];
+
+      if (i === 0) {
+        newLines.push(cLine);
+        continue;
+      }
+
+      const pLine = this.lines[i - 1];
+
+      if (cLine[0] - pLine[1] >= gap) {
+        const ls: TimePoint = cLine[0] - indicatorsDuration;
+        const le: TimePoint = cLine[0];
+        newLines.push(
+          [
+            ls,
+            le,
+            indicators.map((i, index) => {
+              const st = ls + index * 1000;
+              const et = st + 1000;
+              return [st, et, i];
+            }),
+          ],
+          cLine,
+        );
+      } else {
+        newLines.push(cLine);
+      }
+    }
+
+    this.lines.splice(0, this.lines.length, ...newLines);
+
+    return newLines;
+  }
+
   public getLinesByTimePoint(tp: TimePoint): Line[] {
     return this.getLineIndexesByTimePoint(tp).map((index) => this.lines[index]);
   }
@@ -131,6 +177,7 @@ export default class Lyrics {
 
       // the start time point of current line
       const lineStp = syllables[0][0];
+      const lineEtp = syllables[syllables.length - 1][1];
 
       if (lyrics.lines.length > 0) {
         const prevLine = lyrics.lines[lyrics.lines.length - 1];
@@ -143,10 +190,12 @@ export default class Lyrics {
           }
         }
         // use the start time point of current line to fill the end time of the prev line
-        prevLine[1] = lineStp;
+        if (!prevLine[1]) {
+          prevLine[1] = lineStp;
+        }
       }
 
-      lyrics.lines.push([lineStp, 0, syllables]);
+      lyrics.lines.push([lineStp, lineEtp, syllables]);
     }
 
     // sort by start time point asc
