@@ -1,7 +1,9 @@
 export type Millisecond = number;
 export type TimePoint = Millisecond;
-export type Syllable = [TimePoint, TimePoint, string];
-export type Line = [TimePoint, TimePoint, Syllable[]];
+export type StartTimePoint = TimePoint;
+export type EndTimePoint = TimePoint;
+export type Syllable = [StartTimePoint, EndTimePoint, string];
+export type Line = [StartTimePoint, EndTimePoint, Syllable[]];
 export type Progress = 0 | 1 | number;
 
 export default class Lyrics {
@@ -40,17 +42,16 @@ export default class Lyrics {
 
     const newLines: typeof this.lines = [];
 
-    for (let i = 0; i < this.lines.length; i++) {
-      const cLine = this.lines[i];
+    let lastEtp: EndTimePoint = 0;
 
-      if (i === 0) {
-        newLines.push(cLine);
-        continue;
+    for (let i = 0; i < this.lines.length; i++) {
+      if (i > 0) {
+        lastEtp = this.lines[i - 1][1];
       }
 
-      const pLine = this.lines[i - 1];
+      const cLine = this.lines[i];
 
-      if (cLine[0] - pLine[1] >= gap) {
+      if (cLine[0] - lastEtp >= gap) {
         const ls: TimePoint = cLine[0] - indicatorsDuration;
         const le: TimePoint = cLine[0];
         newLines.push(
