@@ -31,6 +31,29 @@ export default class Lyrics {
     });
   }
 
+  /**
+   * Glue lines with the gap less than diff, the previous end time point as the start time point of the next line
+   * @param diff the gap between two lines
+   */
+  public glueLine(diff: Millisecond = 1000): Line[] {
+    this.lines.forEach((line, index, lines) => {
+      if (index === 0) {
+        return;
+      }
+
+      const prevLine = lines.slice(0, index).reverse().find((l) => l[0] < line[0]);
+
+      if (!prevLine) {
+        return;
+      }
+
+      if (line[0] - prevLine[1] <= diff) {
+        line[0] = prevLine[1];
+      }
+    });
+    return this.lines;
+  }
+
   public insertStartIndicator(
     gap: Millisecond = 5_000,
     indicators: string[] = ["⬤ ", " ⬤ ", " ⬤"],

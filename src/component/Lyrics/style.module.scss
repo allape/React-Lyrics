@@ -9,13 +9,15 @@
     padding: 0 10px;
 
     .line {
-      text-align: center;
-      word-break: break-word;
-      margin: 10px 0;
+      margin: 40px 0;
       font-size: 28px;
       cursor: pointer;
       transition: 0.25s;
       user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
 
       &:hover {
         .syllable {
@@ -71,6 +73,12 @@
             overflow: visible;
             line-height: normal;
             vertical-align: baseline;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            &.hasSpace {
+              margin: 0 6px;
+            }
           }
 
           .truth {
@@ -80,9 +88,11 @@
 
           .mask {
             @include TextAlignment;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: visible;
             position: absolute;
             text-align: left;
+            justify-content: flex-start;
             top: 0;
             left: 0;
             width: 0;

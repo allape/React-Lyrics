@@ -54,6 +54,7 @@ export default function Lyrics({
       return;
     }
     const driver = LyricsDriver.parse(content);
+    driver.glueLine();
     driver.insertStartIndicator();
     setLyricsDriver(driver);
   }, [content]);
@@ -124,32 +125,35 @@ export default function Lyrics({
             onClick={() => onChange?.(l[0] + offset - NormalHumanDelay)}
             style={stylesFromProps?.line}
           >
-            {l[2].map((i, syllableIndex) => (
-              <span
-                key={`line${lineIndex}_s${syllableIndex}`}
-                className={cls(styles.syllable, karaoke && styles.karaoke)}
-              >
-                <span
-                  className={styles.truth}
-                  style={stylesFromProps?.syllable}
+            {l[2].map((i, syllableIndex) => {
+              const hasSpace = i[2].endsWith(" ") || i[2].startsWith(" ");
+              return (
+                <div
+                  key={`line${lineIndex}_s${syllableIndex}`}
+                  className={cls(styles.syllable, karaoke && styles.karaoke)}
                 >
-                  {i[2]}
-                </span>
-                {karaoke && (
-                  <span
-                    className={styles.mask}
-                    style={{
-                      ...stylesFromProps?.mask,
-                      width: karaoke
-                        ? `${(progresses[lineIndex]?.[syllableIndex] || 0) * 100}%`
-                        : "100%",
-                    }}
+                  <div
+                    className={cls(styles.truth, hasSpace && styles.hasSpace)}
+                    style={stylesFromProps?.syllable}
                   >
                     {i[2]}
-                  </span>
-                )}
-              </span>
-            ))}
+                  </div>
+                  {karaoke && (
+                    <div
+                      className={cls(styles.mask, hasSpace && styles.hasSpace)}
+                      style={{
+                        ...stylesFromProps?.mask,
+                        width: karaoke
+                          ? `${(progresses[lineIndex]?.[syllableIndex] || 0) * 100}%`
+                          : "100%",
+                      }}
+                    >
+                      {i[2]}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
