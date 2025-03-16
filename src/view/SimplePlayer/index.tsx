@@ -20,7 +20,7 @@ export default function SimplePlayer({
   const [url, setUrl] = useState<string | undefined>(urlFromProps);
   const [text, setText] = useState<string | undefined>(content);
 
-  const [current] = useRAFAudioTime(audioRef);
+  const [current] = useRAFAudioTime(audioRef.current);
 
   const handleChange = useCallback((tp: TimePoint) => {
     if (audioRef.current) {

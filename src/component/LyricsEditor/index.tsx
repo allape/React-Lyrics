@@ -313,7 +313,7 @@ export default function LyricsEditor({
     handleTogglePlay,
   ]);
 
-  const [current] = useRAFAudioTime(audioRef);
+  const [current] = useRAFAudioTime(audioRef.current);
 
   return (
     <div className={styles.wrapper}>

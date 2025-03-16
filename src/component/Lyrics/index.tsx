@@ -20,11 +20,25 @@ export const NormalHumanDelay: Millisecond = 100;
 
 export type LineIndex = number;
 
+export interface IClassNames {
+  wrapper?: string;
+  placeholder?: string;
+  lines?: string;
+  line?: string;
+  current?: string;
+  syllable?: string;
+  karaoke?: string;
+  truth?: string;
+  hasSpace?: string;
+  mask?: string;
+}
+
 export interface ILyricsProps {
   offset?: Millisecond;
   current?: Millisecond;
   karaoke?: boolean;
   content?: string;
+  classNames?: IClassNames;
   styles?: Partial<Record<"line" | "syllable" | "mask", CSSProperties>>;
   onChange?: (tp: TimePoint) => void;
 }
@@ -35,6 +49,7 @@ export default function Lyrics({
   karaoke,
   content,
   styles: stylesFromProps,
+  classNames,
   onChange,
 }: ILyricsProps): ReactElement {
   const lastInteractTime = useRef<number>(0);
@@ -106,20 +121,24 @@ export default function Lyrics({
   return (
     <div
       ref={setContainer}
-      className={styles.wrapper}
+      className={cls(styles.wrapper, classNames?.wrapper)}
       onWheel={handleInteracted}
       onTouchStart={handleInteracted}
       onTouchEnd={handleInteracted}
       onTouchMove={handleInteracted}
     >
-      <div className={styles.placeholder}></div>
-      <div className={styles.lines}>
+      <div className={cls(styles.placeholder, classNames?.placeholder)}></div>
+      <div className={cls(styles.lines, classNames?.lines)}>
         {lyricsDriver?.lines.map((l, lineIndex) => (
           <div
             key={lineIndex}
             className={cls(
               styles.line,
-              indexes.includes(lineIndex) && styles.current,
+              classNames?.line,
+              indexes.includes(lineIndex) && [
+                styles.current,
+                classNames?.current,
+              ],
             )}
             data-lyrics={`index-${lineIndex}`}
             onClick={() => onChange?.(l[0] + offset - NormalHumanDelay)}
@@ -130,17 +149,29 @@ export default function Lyrics({
               return (
                 <div
                   key={`line${lineIndex}_s${syllableIndex}`}
-                  className={cls(styles.syllable, karaoke && styles.karaoke)}
+                  className={cls(
+                    styles.syllable,
+                    classNames?.syllable,
+                    karaoke && [styles.karaoke, classNames?.karaoke],
+                  )}
                 >
                   <div
-                    className={cls(styles.truth, hasSpace && styles.hasSpace)}
+                    className={cls(
+                      styles.truth,
+                      classNames?.truth,
+                      hasSpace && [styles.hasSpace, classNames?.hasSpace],
+                    )}
                     style={stylesFromProps?.syllable}
                   >
                     {i[2]}
                   </div>
                   {karaoke && (
                     <div
-                      className={cls(styles.mask, hasSpace && styles.hasSpace)}
+                      className={cls(
+                        styles.mask,
+                        classNames?.mask,
+                        hasSpace && [styles.hasSpace, classNames?.hasSpace],
+                      )}
                       style={{
                         ...stylesFromProps?.mask,
                         width: karaoke
@@ -157,7 +188,7 @@ export default function Lyrics({
           </div>
         ))}
       </div>
-      <div className={styles.placeholder}></div>
+      <div className={cls(styles.placeholder, classNames?.placeholder)}></div>
     </div>
   );
 }

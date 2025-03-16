@@ -251,7 +251,7 @@ const LyricsOptions: ILyricsLV[] = [
 export default function Demo(): ReactElement {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const [current] = useRAFAudioTime(audioRef);
+  const [current] = useRAFAudioTime(audioRef.current);
   const [content, setContent] = useState<string>(() => LyricsOptions[0].value);
 
   const handleChange = useCallback((ct: TimePoint) => {

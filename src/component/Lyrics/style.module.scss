@@ -74,7 +74,7 @@
             line-height: normal;
             vertical-align: baseline;
             display: flex;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             &.hasSpace {
               margin: 0 6px;
@@ -92,7 +92,6 @@
             overflow-y: visible;
             position: absolute;
             text-align: left;
-            justify-content: flex-start;
             top: 0;
             left: 0;
             width: 0;

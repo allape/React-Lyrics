@@ -1,34 +1,52 @@
-import {
-  Dispatch,
-  MutableRefObject,
-  SetStateAction,
-  useEffect,
-  useState,
-} from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { TimePoint } from "../core/lyrics.ts";
 
 export default function useRAFAudioTime(
-  audioRef: MutableRefObject<HTMLAudioElement | null>,
+  audio: HTMLAudioElement | null,
 ): [TimePoint, Dispatch<SetStateAction<TimePoint>>] {
   const [current, setCurrent] = useState<TimePoint>(0);
 
   useEffect(() => {
+    if (!audio) {
+      setCurrent(0);
+      return;
+    }
+
     let id = -1;
+
     const handleRequestAnimationFrame = () => {
       try {
-        if (!audioRef.current) {
-          return;
-        }
-        setCurrent(audioRef.current.currentTime * 1000);
+        setCurrent(audio.currentTime * 1000);
       } finally {
         id = window.requestAnimationFrame(handleRequestAnimationFrame);
       }
     };
-    handleRequestAnimationFrame();
-    return () => {
+
+    if (!audio.paused) {
+      handleRequestAnimationFrame();
+    }
+
+    const handlePlay = () => {
+      handleRequestAnimationFrame();
+    };
+
+    const handlePause = () => {
       window.cancelAnimationFrame(id);
     };
-  }, [audioRef]);
+
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("stop", handlePause);
+    audio.addEventListener("ended", handlePause);
+
+    return () => {
+      window.cancelAnimationFrame(id);
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("stop", handlePause);
+      audio.removeEventListener("ended", handlePause);
+    };
+  }, [audio]);
 
   return [current, setCurrent];
 }
