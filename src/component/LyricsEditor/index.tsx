@@ -9,7 +9,9 @@ import {
   useState,
 } from "react";
 import Lyrics, { Millisecond, TimePoint } from "../../core/lyrics.ts";
+import useRAFAudioTime from "../../hook/useRAFAudioTime.ts";
 import FileInput from "../FileInput";
+import WaveForm from "../Waveform";
 import styles from "./style.module.scss";
 
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
@@ -311,6 +313,8 @@ export default function LyricsEditor({
     handleTogglePlay,
   ]);
 
+  const [current] = useRAFAudioTime(audioRef);
+
   return (
     <div className={styles.wrapper}>
       <FileInput value={audioURL} onChange={setAudioURL} />
@@ -331,12 +335,10 @@ export default function LyricsEditor({
         onChange={(e) => setText(e.target.value)}
       ></textarea>
       <hr />
-      <audio
-        ref={audioRef}
-        className={styles.audio}
-        src={audioURL}
-        controls
-      ></audio>
+      <div className={styles.audio}>
+        <audio ref={audioRef} src={audioURL} controls></audio>
+        <WaveForm current={current} url={audioURL} />
+      </div>
       <hr />
       <p>[Space] to toggle player, [Shift] + [Arrow Keys] to seek player;</p>
       <p>Hold [Arrow Keys] to start recording syllable.</p>

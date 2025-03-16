@@ -9,4 +9,9 @@ export {
   type ILyricsEditorProps,
 } from "./src/component/LyricsEditor";
 
+export {
+  default as Waveform,
+  type IWaveFormProps,
+} from "./src/component/Waveform";
+
 export { default as useRAFAudioTime } from "./src/hook/useRAFAudioTime";
