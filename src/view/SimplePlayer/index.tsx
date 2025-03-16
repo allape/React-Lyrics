@@ -1,4 +1,5 @@
-import { ReactElement, useCallback, useRef, useState } from "react";
+import { useProxy } from "@allape/use-loading";
+import { ReactElement, useCallback, useState } from "react";
 import DroppableTextarea from "../../component/DroppableTextarea";
 import FileInput from "../../component/FileInput";
 import Lyrics from "../../component/Lyrics";
@@ -15,18 +16,21 @@ export default function SimplePlayer({
   url: urlFromProps,
   content,
 }: ISimplePlayerProps): ReactElement {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audio, audioRef, setAudio] = useProxy<HTMLAudioElement | null>(null);
 
   const [url, setUrl] = useState<string | undefined>(urlFromProps);
   const [text, setText] = useState<string | undefined>(content);
 
-  const [current] = useRAFAudioTime(audioRef.current);
+  const [current] = useRAFAudioTime(audio);
 
-  const handleChange = useCallback((tp: TimePoint) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = tp / 1000;
-    }
-  }, []);
+  const handleChange = useCallback(
+    (tp: TimePoint) => {
+      if (audioRef.current) {
+        audioRef.current.currentTime = tp / 1000;
+      }
+    },
+    [audioRef],
+  );
 
   return (
     <div className={styles.wrapper}>
@@ -40,7 +44,7 @@ export default function SimplePlayer({
         onChange={setText}
       ></DroppableTextarea>
       <hr />
-      <audio ref={audioRef} className={styles.audio} src={url} controls></audio>
+      <audio ref={setAudio} className={styles.audio} src={url} controls></audio>
       <Lyrics
         current={current}
         content={text}

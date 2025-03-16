@@ -1,4 +1,5 @@
-import { ReactElement, useCallback, useMemo, useRef, useState } from "react";
+import { useProxy } from "@allape/use-loading";
+import { ReactElement, useCallback, useMemo, useState } from "react";
 import Lyrics from "../../component/Lyrics";
 import { TimePoint } from "../../core/lyrics.ts";
 import { ILV } from "../../helper/lv.ts";
@@ -249,18 +250,21 @@ const LyricsOptions: ILyricsLV[] = [
 ];
 
 export default function Demo(): ReactElement {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audio, audioRef, setAudio] = useProxy<HTMLAudioElement | null>(null);
 
-  const [current] = useRAFAudioTime(audioRef.current);
+  const [current] = useRAFAudioTime(audio);
   const [content, setContent] = useState<string>(() => LyricsOptions[0].value);
 
-  const handleChange = useCallback((ct: TimePoint) => {
-    if (!audioRef.current) {
-      return;
-    }
+  const handleChange = useCallback(
+    (ct: TimePoint) => {
+      if (!audioRef.current) {
+        return;
+      }
 
-    audioRef.current.currentTime = ct / 1000;
-  }, []);
+      audioRef.current.currentTime = ct / 1000;
+    },
+    [audioRef],
+  );
 
   const karaoke = useMemo(
     () => LyricsOptions.find((o) => o.value === content)?.karaoke,
@@ -269,7 +273,7 @@ export default function Demo(): ReactElement {
 
   return (
     <div className={styles.wrapper}>
-      <audio className={styles.audio} ref={audioRef} controls>
+      <audio className={styles.audio} ref={setAudio} controls>
         <source
           src="https://guoyunhe.me/wp-content/uploads/2015/03/hao-gan-win-win-wu-tiao-jian.ogg"
           type="audio/ogg"

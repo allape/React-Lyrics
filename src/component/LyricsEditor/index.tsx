@@ -43,7 +43,7 @@ export default function LyricsEditor({
   const fileNameRef = useRef<string | undefined>(undefined);
   const [audioURL, setAudioURL] = useState<string | undefined>(undefined);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audio, audioRef, setAudio] = useProxy<HTMLAudioElement | null>(null);
 
   const timePointsRef = useRef<TimePoints>({});
 
@@ -100,13 +100,16 @@ export default function LyricsEditor({
     );
   }, [setLineIndex, setLines, setSyllableIndex, text, wordSplitterRegexp]);
 
-  const handleSeek = useCallback((duration: Millisecond) => {
-    if (!audioRef.current) {
-      return;
-    }
-    const nextTime = audioRef.current.currentTime + duration / 1000;
-    audioRef.current.currentTime = nextTime < 0 ? 0 : nextTime;
-  }, []);
+  const handleSeek = useCallback(
+    (duration: Millisecond) => {
+      if (!audioRef.current) {
+        return;
+      }
+      const nextTime = audioRef.current.currentTime + duration / 1000;
+      audioRef.current.currentTime = nextTime < 0 ? 0 : nextTime;
+    },
+    [audioRef],
+  );
 
   const handleExport = useCallback(() => {
     if (!linesRef.current.length) {
@@ -167,7 +170,7 @@ export default function LyricsEditor({
     } else {
       audioRef.current.pause();
     }
-  }, []);
+  }, [audioRef]);
 
   useEffect(() => {
     if (!editor) {
@@ -311,9 +314,10 @@ export default function LyricsEditor({
     syllableIndexRef,
     editor,
     handleTogglePlay,
+    audioRef,
   ]);
 
-  const [current] = useRAFAudioTime(audioRef.current);
+  const [current] = useRAFAudioTime(audio);
 
   return (
     <div className={styles.wrapper}>
@@ -336,7 +340,7 @@ export default function LyricsEditor({
       ></textarea>
       <hr />
       <div className={styles.audio}>
-        <audio ref={audioRef} src={audioURL} controls></audio>
+        <audio ref={setAudio} src={audioURL} controls></audio>
         <WaveForm current={current} url={audioURL} />
       </div>
       <hr />
