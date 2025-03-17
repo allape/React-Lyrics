@@ -34,10 +34,17 @@ export default function useRAFAudioTime(
       window.cancelAnimationFrame(id);
     };
 
+    const handleTimeUpdate = () => {
+      if (audio.paused) {
+        setCurrent(audio.currentTime * 1000);
+      }
+    };
+
     audio.addEventListener("play", handlePlay);
     audio.addEventListener("pause", handlePause);
     audio.addEventListener("stop", handlePause);
     audio.addEventListener("ended", handlePause);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
 
     return () => {
       window.cancelAnimationFrame(id);
@@ -45,6 +52,7 @@ export default function useRAFAudioTime(
       audio.removeEventListener("pause", handlePause);
       audio.removeEventListener("stop", handlePause);
       audio.removeEventListener("ended", handlePause);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
     };
   }, [audio]);
 

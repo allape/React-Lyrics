@@ -9,45 +9,26 @@ export type Progress = 0 | 1 | number;
 export default class Lyrics {
   public readonly lines: Line[] = [];
 
-  public getProgressesByTimePointInLine(
-    tp: TimePoint,
-    line: Line | number,
-  ): Progress[] {
-    if (typeof line === "number") {
-      line = this.lines[line];
-      if (!line) {
-        return [];
-      }
-    }
-
-    return line[2].map(([st, et]) => {
-      if (tp <= st) {
-        return 0;
-      } else if (tp >= et) {
-        return 1;
-      }
-
-      return (tp - st) / (et - st);
-    });
-  }
-
   /**
    * Glue lines with the gap less than diff, the previous end time point as the start time point of the next line
-   * @param diff the gap between two lines
+   * @param diff the gap between two lines, use negative number to glue all lines with no gap
    */
-  public glueLine(diff: Millisecond = 1000): Line[] {
+  public glueLine(diff: Millisecond | -1 = -1): Line[] {
     this.lines.forEach((line, index, lines) => {
       if (index === 0) {
         return;
       }
 
-      const prevLine = lines.slice(0, index).reverse().find((l) => l[0] < line[0]);
+      const prevLine = lines
+        .slice(0, index)
+        .reverse()
+        .find((l) => l[0] < line[0]);
 
       if (!prevLine) {
         return;
       }
 
-      if (line[0] - prevLine[1] <= diff) {
+      if (diff < 0 || line[0] - prevLine[1] <= diff) {
         line[0] = prevLine[1];
       }
     });
@@ -56,7 +37,8 @@ export default class Lyrics {
 
   public insertStartIndicator(
     gap: Millisecond = 5_000,
-    indicators: string[] = ["⬤ ", " ⬤ ", " ⬤"],
+    indicators: string[] = [" ● ", " ● ", " ● "],
+    fillRestGapWith: string = " ~  ~  ~ ",
   ): Line[] {
     const indicatorsDuration = indicators.length * 1000;
     if (indicatorsDuration > gap) {
@@ -77,6 +59,9 @@ export default class Lyrics {
       if (cLine[0] - lastEtp >= gap) {
         const ls: TimePoint = cLine[0] - indicatorsDuration;
         const le: TimePoint = cLine[0];
+        if (fillRestGapWith) {
+          newLines.push([lastEtp, ls, [[lastEtp, ls, fillRestGapWith]]]);
+        }
         newLines.push(
           [
             ls,
@@ -97,6 +82,28 @@ export default class Lyrics {
     this.lines.splice(0, this.lines.length, ...newLines);
 
     return newLines;
+  }
+
+  public getProgressesByTimePointInLine(
+    tp: TimePoint,
+    line: Line | number,
+  ): Progress[] {
+    if (typeof line === "number") {
+      line = this.lines[line];
+      if (!line) {
+        return [];
+      }
+    }
+
+    return line[2].map(([st, et]) => {
+      if (tp <= st) {
+        return 0;
+      } else if (tp >= et) {
+        return 1;
+      }
+
+      return (tp - st) / (et - st);
+    });
   }
 
   public getLinesByTimePoint(tp: TimePoint): Line[] {

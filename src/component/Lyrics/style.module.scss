@@ -9,8 +9,8 @@
     padding: 0 10px;
 
     .line {
-      margin: 40px 0;
-      font-size: 28px;
+      margin: 30px 0;
+      font-size: 20px;
       cursor: pointer;
       transition: 0.25s;
       user-select: none;
@@ -31,8 +31,21 @@
         }
       }
 
+      &.current3 {
+        scale: 1.05;
+      }
+
+      &.current2 {
+        scale: 1.1;
+      }
+
+      &.current1 {
+        scale: 1.3;
+      }
+
       &.current {
         font-weight: bold;
+        scale: 1.5;
 
         .syllable {
           opacity: 1 !important;

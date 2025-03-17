@@ -26,6 +26,7 @@ export interface IClassNames {
   lines?: string;
   line?: string;
   current?: string;
+  currentx?: Record<number, string>;
   syllable?: string;
   karaoke?: string;
   truth?: string;
@@ -69,8 +70,8 @@ export default function Lyrics({
       return;
     }
     const driver = LyricsDriver.parse(content);
-    driver.glueLine();
     driver.insertStartIndicator();
+    driver.glueLine();
     setLyricsDriver(driver);
   }, [content]);
 
@@ -129,64 +130,78 @@ export default function Lyrics({
     >
       <div className={cls(styles.placeholder, classNames?.placeholder)}></div>
       <div className={cls(styles.lines, classNames?.lines)}>
-        {lyricsDriver?.lines.map((l, lineIndex) => (
-          <div
-            key={lineIndex}
-            className={cls(
-              styles.line,
-              classNames?.line,
-              indexes.includes(lineIndex) && [
-                styles.current,
-                classNames?.current,
-              ],
-            )}
-            data-lyrics={`index-${lineIndex}`}
-            onClick={() => onChange?.(l[0] + offset - NormalHumanDelay)}
-            style={stylesFromProps?.line}
-          >
-            {l[2].map((i, syllableIndex) => {
-              const hasSpace = i[2].endsWith(" ") || i[2].startsWith(" ");
-              return (
-                <div
-                  key={`line${lineIndex}_s${syllableIndex}`}
-                  className={cls(
-                    styles.syllable,
-                    classNames?.syllable,
-                    karaoke && [styles.karaoke, classNames?.karaoke],
-                  )}
-                >
+        {lyricsDriver?.lines.map((l, lineIndex) => {
+          let isCurrent = false;
+          let distanceFromCurrent = 0;
+
+          if (indexes.includes(lineIndex)) {
+            isCurrent = true;
+          } else {
+            if (lineIndex < indexes[0]) {
+              distanceFromCurrent = indexes[0] - lineIndex;
+            } else {
+              distanceFromCurrent = lineIndex - indexes[indexes.length - 1];
+            }
+          }
+
+          return (
+            <div
+              key={lineIndex}
+              className={cls(
+                styles.line,
+                classNames?.line,
+                isCurrent && [styles.current, classNames?.current],
+                styles[`current${distanceFromCurrent}`],
+                classNames?.currentx?.[distanceFromCurrent],
+              )}
+              data-lyrics={`index-${lineIndex}`}
+              onClick={() => onChange?.(l[0] + offset - NormalHumanDelay)}
+              style={stylesFromProps?.line}
+            >
+              {l[2].map((i, syllableIndex) => {
+                const hasSpace = i[2].endsWith(" ") || i[2].startsWith(" ");
+                return (
                   <div
+                    key={`line${lineIndex}_s${syllableIndex}`}
                     className={cls(
-                      styles.truth,
-                      classNames?.truth,
-                      hasSpace && [styles.hasSpace, classNames?.hasSpace],
+                      styles.syllable,
+                      classNames?.syllable,
+                      karaoke && [styles.karaoke, classNames?.karaoke],
                     )}
-                    style={stylesFromProps?.syllable}
                   >
-                    {i[2]}
-                  </div>
-                  {karaoke && (
                     <div
                       className={cls(
-                        styles.mask,
-                        classNames?.mask,
+                        styles.truth,
+                        classNames?.truth,
                         hasSpace && [styles.hasSpace, classNames?.hasSpace],
                       )}
-                      style={{
-                        ...stylesFromProps?.mask,
-                        width: karaoke
-                          ? `${(progresses[lineIndex]?.[syllableIndex] || 0) * 100}%`
-                          : "100%",
-                      }}
+                      style={stylesFromProps?.syllable}
                     >
                       {i[2]}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                    {karaoke && (
+                      <div
+                        className={cls(
+                          styles.mask,
+                          classNames?.mask,
+                          hasSpace && [styles.hasSpace, classNames?.hasSpace],
+                        )}
+                        style={{
+                          ...stylesFromProps?.mask,
+                          width: karaoke
+                            ? `${(progresses[lineIndex]?.[syllableIndex] || 0) * 100}%`
+                            : "100%",
+                        }}
+                      >
+                        {i[2]}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
       <div className={cls(styles.placeholder, classNames?.placeholder)}></div>
     </div>
