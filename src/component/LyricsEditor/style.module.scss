@@ -45,7 +45,7 @@
   }
 
   .lines {
-    padding: 20px 10px;
+    padding: 10px;
     margin: 0 -10px;
 
     &:focus {
@@ -54,10 +54,16 @@
 
     .line {
       margin-bottom: 20px;
+      font-size: 20px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
 
       .syllable {
         padding: 4px 6px;
-        margin-right: 10px;
         border: 1px solid lightgray;
         cursor: pointer;
         user-select: none;

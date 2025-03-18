@@ -357,6 +357,7 @@ export default function LyricsEditor({
           return (
             <div key={li} className={styles.line} data-line={`index-${li}`}>
               {line.map((syllable, si) => {
+                const isCurrentLine = lineIndex === li;
                 return (
                   <span
                     key={`line${li}_syllable${si}`}
@@ -366,12 +367,10 @@ export default function LyricsEditor({
                     }}
                     className={cls(
                       styles.syllable,
-                      (lineIndex === li && syllableIndex > si) || lineIndex > li
+                      (isCurrentLine && syllableIndex > si) || lineIndex > li
                         ? styles.filled
                         : undefined,
-                      lineIndex === li &&
-                        syllableIndex === si &&
-                        styles.current,
+                      isCurrentLine && syllableIndex === si && styles.current,
                     )}
                   >
                     {syllable.trim()}
