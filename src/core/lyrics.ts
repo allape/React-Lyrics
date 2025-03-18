@@ -28,7 +28,9 @@ export default class Lyrics {
         return;
       }
 
-      if (diff < 0 || line[0] - prevLine[1] <= diff) {
+      const lineDiff = line[0] - prevLine[1];
+
+      if (lineDiff > 0 && (diff < 0 || lineDiff <= diff)) {
         line[0] = prevLine[1];
       }
     });
