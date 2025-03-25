@@ -317,10 +317,19 @@ export default function LyricsEditor({
     audioRef,
   ]);
 
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+
+  const handleBackToTop = useCallback(() => {
+    titleRef.current?.scrollIntoView({
+      block: "start",
+    });
+  }, []);
+
   const [current] = useRAFAudioTime(audio);
 
   return (
     <div className={styles.wrapper}>
+      <h2 ref={titleRef}>Lyrics Editor</h2>
       <FileInput value={audioURL} onChange={setAudioURL} />
       <hr />
       <input
@@ -382,6 +391,7 @@ export default function LyricsEditor({
         })}
       </div>
       <div className={styles.buttons}>
+        <button onClick={handleBackToTop}>Back to TOP</button>
         <button onClick={handleExport}>Export</button>
       </div>
     </div>
