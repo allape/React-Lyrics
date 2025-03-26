@@ -1,6 +1,5 @@
 import { HTMLProps, ReactElement, useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
-import ZoomPlugin from "wavesurfer.js/plugins/zoom";
 import { TimePoint } from "../../core/lyrics.ts";
 
 export interface IWaveFormProps extends HTMLProps<HTMLDivElement> {
@@ -27,14 +26,9 @@ export default function WaveForm({
       waveColor: "#4F4A85",
       progressColor: "#383351",
       minPxPerSec: 100,
+      autoScroll: true,
+      autoCenter: true,
     });
-
-    s.registerPlugin(
-      ZoomPlugin.create({
-        scale: 0.5,
-        maxZoom: 100,
-      }),
-    );
 
     surfer.current = s;
     return () => {
@@ -47,8 +41,14 @@ export default function WaveForm({
       return;
     }
 
-    surfer.current.setTime((current || 0) / 1000);
+    const time = (current || 0) / 1000;
+    surfer.current.setTime(time);
+    surfer.current.setScrollTime(time - surfer.current.getWidth() / 100 / 2);
   }, [current]);
 
-  return <div ref={setContainer} {...props}></div>;
+  return (
+    <div ref={setContainer} {...props}>
+      {url ? undefined : <p style={{ textAlign: "center" }}>No Audio Load</p>}
+    </div>
+  );
 }

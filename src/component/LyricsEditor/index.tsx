@@ -16,7 +16,7 @@ import styles from "./style.module.scss";
 
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
-export const DefaultWordSplitterRegexp = /([\w'?,;.]+|\S[。，]?)\s*/gi;
+export const DefaultWordSplitterRegexp = /([a-zA-Z'?,;.]+|\S[。，]?)\s*/gi;
 
 export interface ILyricsEditorProps {
   onExport?: (
@@ -46,6 +46,14 @@ export default function LyricsEditor({
   const [audio, audioRef, setAudio] = useProxy<HTMLAudioElement | null>(null);
 
   const timePointsRef = useRef<TimePoints>({});
+
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+
+  const handleBackToTop = useCallback(() => {
+    titleRef.current?.scrollIntoView({
+      block: "start",
+    });
+  }, []);
 
   const handleDropLRCFile = useCallback(
     async (e: DragEvent<HTMLTextAreaElement>) => {
@@ -144,8 +152,8 @@ export default function LyricsEditor({
     if (onExport) {
       onExport(lyrics, linesRef.current, timePointsRef.current);
     } else {
-      let filename = `${fileNameRef.current || "lyrics"}.lrcp`;
-      filename = window.prompt("Filename", filename) || filename;
+      let filename: string | null = `${fileNameRef.current || "lyrics"}.lrcp`;
+      filename = window.prompt("Filename", filename);
       if (!filename) {
         console.log("No filename, export cancelled");
         return;
@@ -157,8 +165,9 @@ export default function LyricsEditor({
       a.download = `${fileNameRef.current || "lyrics"}.lrcp`;
       a.click();
       a.remove();
+      handleBackToTop();
     }
-  }, [linesRef, onExport]);
+  }, [handleBackToTop, linesRef, onExport]);
 
   const handleTogglePlay = useCallback(() => {
     if (!audioRef.current) {
@@ -316,14 +325,6 @@ export default function LyricsEditor({
     handleTogglePlay,
     audioRef,
   ]);
-
-  const titleRef = useRef<HTMLHeadingElement | null>(null);
-
-  const handleBackToTop = useCallback(() => {
-    titleRef.current?.scrollIntoView({
-      block: "start",
-    });
-  }, []);
 
   const [current] = useRAFAudioTime(audio);
 
