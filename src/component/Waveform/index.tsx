@@ -1,15 +1,16 @@
 import { HTMLProps, ReactElement, useEffect, useRef, useState } from "react";
-import WaveSurfer from "wavesurfer.js";
-import { TimePoint } from "../../core/lyrics.ts";
+import WaveSurfer, { WaveSurferOptions } from "wavesurfer.js";
 
 export interface IWaveFormProps extends HTMLProps<HTMLDivElement> {
   url?: string;
-  current?: TimePoint;
+  waveOptions?: Omit<WaveSurferOptions, "container" | "url">;
+  onAudioLoaded?: (waveSurfer: WaveSurfer) => void;
 }
 
 export default function WaveForm({
   url,
-  current,
+  waveOptions,
+  onAudioLoaded,
   ...props
 }: IWaveFormProps): ReactElement {
   const surfer = useRef<WaveSurfer | null>(null);
@@ -28,23 +29,18 @@ export default function WaveForm({
       minPxPerSec: 100,
       autoScroll: true,
       autoCenter: true,
+      mediaControls: true,
+      ...waveOptions,
     });
 
     surfer.current = s;
+
+    onAudioLoaded?.(s);
+
     return () => {
       s.destroy();
     };
-  }, [container, url]);
-
-  useEffect(() => {
-    if (!surfer.current) {
-      return;
-    }
-
-    const time = (current || 0) / 1000;
-    surfer.current.setTime(time);
-    surfer.current.setScrollTime(time - surfer.current.getWidth() / 100 / 2);
-  }, [current]);
+  }, [container, onAudioLoaded, url, waveOptions]);
 
   return (
     <div ref={setContainer} {...props}>

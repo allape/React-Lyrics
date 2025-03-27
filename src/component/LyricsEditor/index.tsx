@@ -8,8 +8,8 @@ import {
   useRef,
   useState,
 } from "react";
+import WaveSurfer from "wavesurfer.js";
 import Lyrics, { Millisecond, TimePoint } from "../../core/lyrics.ts";
-import useRAFAudioTime from "../../hook/useRAFAudioTime.ts";
 import FileInput from "../FileInput";
 import WaveForm from "../Waveform";
 import styles from "./style.module.scss";
@@ -29,10 +29,9 @@ export interface ILyricsEditorProps {
 export default function LyricsEditor({
   onExport,
 }: ILyricsEditorProps): ReactElement {
-  const [text, setText] = useState<string>("");
-  const [wordSplitterRegexp, setWordSplitterRegexp] = useState<string>(
-    () => DefaultWordSplitterRegexp.source,
-  );
+  const [text, textRef, setText] = useProxy<string>("");
+  const [wordSplitterRegexp, wordSplitterRegexpRef, setWordSplitterRegexp] =
+    useProxy<string>(DefaultWordSplitterRegexp.source);
   const [lines, linesRef, setLines] = useProxy<string[][]>([]);
   const [lineIndex, lineIndexRef, setLineIndex] = useProxy<number>(0);
   const [syllableIndex, syllableIndexRef, setSyllableIndex] =
@@ -43,7 +42,7 @@ export default function LyricsEditor({
   const fileNameRef = useRef<string | undefined>(undefined);
   const [audioURL, setAudioURL] = useState<string | undefined>(undefined);
 
-  const [audio, audioRef, setAudio] = useProxy<HTMLAudioElement | null>(null);
+  const [, audioRef, setAudio] = useProxy<HTMLAudioElement | null>(null);
 
   const timePointsRef = useRef<TimePoints>({});
 
@@ -54,6 +53,46 @@ export default function LyricsEditor({
       block: "start",
     });
   }, []);
+
+  const handleReload = useCallback(() => {
+    timePointsRef.current = [];
+
+    setLineIndex(0);
+    setSyllableIndex(0);
+    setLines([]);
+
+    if (!textRef.current) {
+      return;
+    }
+
+    let t = textRef.current;
+    if (/\[\d+:\d+(?:\.\d+)?]/gi.test(t)) {
+      const lrc = Lyrics.parseStandardLRC(t);
+      t = lrc.toString();
+    }
+
+    let splitter = DefaultWordSplitterRegexp;
+
+    try {
+      splitter = new RegExp(wordSplitterRegexpRef.current, "gi");
+    } catch (e) {
+      alert(`${(e as Error)?.message || e}`);
+      return;
+    }
+
+    setLines(
+      t
+        .split("\n")
+        .filter((i) => !!i.trim())
+        .map((i) => i.trim().match(splitter) || [i], []),
+    );
+  }, [
+    setLineIndex,
+    setLines,
+    setSyllableIndex,
+    textRef,
+    wordSplitterRegexpRef,
+  ]);
 
   const handleDropLRCFile = useCallback(
     async (e: DragEvent<HTMLTextAreaElement>) => {
@@ -70,43 +109,11 @@ export default function LyricsEditor({
       } else {
         setText(Lyrics.parse(text).toString());
       }
+
+      handleReload();
     },
-    [],
+    [handleReload, setText],
   );
-
-  useEffect(() => {
-    timePointsRef.current = [];
-
-    setLineIndex(0);
-    setSyllableIndex(0);
-    setLines([]);
-
-    if (!text) {
-      return;
-    }
-
-    let t = text;
-    if (/\[\d+:\d+(?:\.\d+)?]/gi.test(t)) {
-      const lrc = Lyrics.parseStandardLRC(t);
-      t = lrc.toString();
-    }
-
-    let splitter = DefaultWordSplitterRegexp;
-
-    try {
-      splitter = new RegExp(wordSplitterRegexp, "gi");
-    } catch (e) {
-      alert(`${(e as Error)?.message || e}`);
-      return;
-    }
-
-    setLines(
-      t
-        .split("\n")
-        .filter((i) => !!i.trim())
-        .map((i) => i.trim().match(splitter) || [i], []),
-    );
-  }, [setLineIndex, setLines, setSyllableIndex, text, wordSplitterRegexp]);
 
   const handleSeek = useCallback(
     (duration: Millisecond) => {
@@ -326,18 +333,25 @@ export default function LyricsEditor({
     audioRef,
   ]);
 
-  const [current] = useRAFAudioTime(audio);
+  const handleAudioLoaded = useCallback(
+    (s: WaveSurfer) => {
+      setAudio(s.getMediaElement());
+    },
+    [setAudio],
+  );
 
   return (
     <div className={styles.wrapper}>
       <h2 ref={titleRef}>Lyrics Editor</h2>
       <FileInput value={audioURL} onChange={setAudioURL} />
       <hr />
+      <label>Word Split RegExp:</label>
       <input
         type="text"
         placeholder="Word split RegExp"
         value={wordSplitterRegexp}
         onChange={(e) => setWordSplitterRegexp(e.target.value)}
+        onBlur={handleReload}
       />
       <hr />
       <textarea
@@ -347,11 +361,11 @@ export default function LyricsEditor({
         placeholder="Add text or drop a LRC file here"
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onBlur={handleReload}
       ></textarea>
       <hr />
       <div className={styles.audio}>
-        <audio ref={setAudio} src={audioURL} controls></audio>
-        <WaveForm current={current} url={audioURL} />
+        <WaveForm url={audioURL} onAudioLoaded={handleAudioLoaded} />
       </div>
       <hr />
       <p>[Space] to toggle player, [Shift] + [Arrow Keys] to seek player;</p>
@@ -392,7 +406,6 @@ export default function LyricsEditor({
         })}
       </div>
       <div className={styles.buttons}>
-        <button onClick={handleBackToTop}>Back to TOP</button>
         <button onClick={handleExport}>Export</button>
       </div>
     </div>

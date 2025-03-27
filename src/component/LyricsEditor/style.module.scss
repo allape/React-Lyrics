@@ -10,8 +10,12 @@
     color: white;
   }
 
+  label {
+    padding-bottom: 4px;
+  }
+
   hr {
-    width: 100%;
+    width: calc(100% - 2px);
   }
 
   .text {
@@ -19,9 +23,9 @@
   }
 
   .audio {
-    width: 100%;
+    width: calc(100% - 20px);
     position: sticky;
-    top: 10px;
+    top: 0;
     left: 0;
     display: flex;
     flex-wrap: nowrap;
@@ -30,7 +34,6 @@
     align-items: stretch;
     gap: 10px;
     padding: 10px;
-    margin: 0 -10px;
     border-radius: 10px;
     background-color: white;
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5);
@@ -46,10 +49,12 @@
 
   .lines {
     padding: 10px;
-    margin: 0 -10px;
+    border: 2px solid transparent;
+    border-radius: 10px;
 
     &:focus {
-      outline: skyblue auto 2px;
+      outline: none;
+      border-color: skyblue;
     }
 
     .line {
@@ -98,8 +103,9 @@
     gap: 10px;
 
     button {
-      font-size: 24px;
+      font-size: 16px;
       padding: 6px 10px;
+      cursor: pointer;
     }
   }
 }
