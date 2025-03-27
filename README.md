@@ -30,10 +30,11 @@ npm run dev
 
 ### File Format
 
-See [唐朝乐队 - 国际歌 / Tang Dynasty - L'Internationale](example/%E5%94%90%E6%9C%9D%E4%B9%90%E9%98%9F%20-%20%E5%9B%BD%E9%99%85%E6%AD%8C.lrcp) for example.
+See [唐朝乐队 - 国际歌 / Tang Dynasty - L'Internationale](example/%E5%94%90%E6%9C%9D%E4%B9%90%E9%98%9F%20-%20%E5%9B%BD%E9%99%85%E6%AD%8C.lrcp)
+for example.
 
 # Credits
 
 - [favicon.png](public/favicon.png): https://www.irasutoya.com/2013/05/blog-post_7121.html
     - Terms(ご利用規定): https://www.irasutoya.com/p/terms.html
-- Demo Song and Lyrics: [🐇 Rabbit Lyrics 🐇](https://guoyunhe.github.io/rabbit-lyrics)
+- [英特纳雄耐尔.ogg](public/%E8%8B%B1%E7%89%B9%E7%BA%B3%E9%9B%84%E8%80%90%E5%B0%94.ogg): https://zh.wikipedia.org/wiki/File:Internationale.ogg

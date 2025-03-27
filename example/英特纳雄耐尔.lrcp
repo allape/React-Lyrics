@@ -1,13 +1,3 @@
-import { ReactElement, useMemo, useState } from "react";
-import { ILV } from "../../helper/lv.ts";
-import SimplePlayer from "../SimplePlayer";
-import styles from "./style.module.scss";
-
-interface ILyricsLV extends ILV {
-  karaoke: boolean;
-}
-
-const LyricsText = `
 [00:13.96]起[00:14.71][00:14.82]来[00:15.79][00:15.93]饥[00:16.22][00:16.30]寒[00:16.58][00:16.68]交[00:16.90][00:17.00]迫[00:17.23][00:17.31]的[00:17.62][00:17.70]奴[00:19.24][00:19.29]隶[00:20.03]
 [00:20.43]起[00:20.68][00:20.78]来[00:21.80][00:21.88]全[00:22.15][00:22.25]世[00:22.53][00:22.61]界[00:22.89][00:22.98]受[00:23.22][00:23.33]苦[00:23.43][00:23.51]的[00:23.58][00:23.68]人[00:25.74]
 [00:26.01]满[00:26.51][00:26.57]腔[00:27.69][00:27.76]的[00:28.01][00:28.07]热[00:28.35][00:28.43]血[00:28.64][00:28.74]已[00:29.02][00:29.11]经[00:29.46][00:29.50]沸[00:30.71][00:30.81]腾[00:31.41]
@@ -56,45 +46,3 @@ const LyricsText = `
 [04:33.60]团[04:34.12][04:34.17]结[04:34.28][04:34.35]起[04:34.47][04:34.53]来[04:35.71][04:35.81]到[04:36.45][04:36.53]明[04:37.09][04:37.16]天[04:39.02]
 [04:39.24]英[04:39.92][04:39.99]特[04:41.34][04:41.44]纳[04:41.94][04:42.01]雄[04:42.89][04:42.95]耐[04:44.44][04:44.49]尔[04:45.39]
 [04:45.68]就[04:46.04][04:46.12]一[04:47.09][04:47.19]定[04:47.53][04:47.59]要[04:48.69][04:48.79]实[04:49.08][04:49.14]现[04:51.75]
-`.trim();
-
-const LyricsOptions: ILyricsLV[] = [
-  {
-    karaoke: true,
-    label: "Karaoke Mode",
-    value: `Karaoke Mode\n${LyricsText}`,
-  },
-  {
-    karaoke: false,
-    label: "Normal Mode",
-    value: `Normal Mode\n${LyricsText}`,
-  },
-];
-
-const OGG = new URL("/英特纳雄耐尔.ogg", import.meta.url).href;
-
-export default function Demo(): ReactElement {
-  const [content, setContent] = useState<string>(() => LyricsOptions[0].value);
-
-  const karaoke = useMemo(
-    () => LyricsOptions.find((o) => o.value === content)?.karaoke,
-    [content],
-  );
-
-  return (
-    <div className={styles.wrapper}>
-      <SimplePlayer url={OGG} karaoke={karaoke} content={content} />
-      <select
-        className={styles.selector}
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-      >
-        {LyricsOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}

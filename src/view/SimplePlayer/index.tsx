@@ -1,5 +1,6 @@
 import { useProxy } from "@allape/use-loading";
 import { ReactElement, useCallback, useState } from "react";
+import { LyricsDriver } from "../../../index.ts";
 import DroppableTextarea from "../../component/DroppableTextarea";
 import FileInput from "../../component/FileInput";
 import Lyrics from "../../component/Lyrics";
@@ -9,11 +10,13 @@ import styles from "./style.module.scss";
 
 export interface ISimplePlayerProps {
   url?: string;
+  karaoke?: boolean;
   content?: string;
 }
 
 export default function SimplePlayer({
   url: urlFromProps,
+  karaoke = true,
   content,
 }: ISimplePlayerProps): ReactElement {
   const [audio, audioRef, setAudio] = useProxy<HTMLAudioElement | null>(null);
@@ -32,6 +35,10 @@ export default function SimplePlayer({
     [audioRef],
   );
 
+  const handleDriverChange = useCallback((driver: LyricsDriver) => {
+    console.log(driver.toString());
+  }, []);
+
   return (
     <div className={styles.wrapper}>
       <FileInput value={url} onChange={setUrl} />
@@ -48,8 +55,9 @@ export default function SimplePlayer({
       <Lyrics
         current={current}
         content={text}
-        karaoke
+        karaoke={karaoke}
         onChange={handleChange}
+        onDriverChange={handleDriverChange}
       />
     </div>
   );

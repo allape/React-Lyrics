@@ -42,6 +42,7 @@ export interface ILyricsProps {
   classNames?: IClassNames;
   styles?: Partial<Record<"line" | "syllable" | "mask", CSSProperties>>;
   onChange?: (tp: TimePoint) => void;
+  onDriverChange?: (driver: LyricsDriver) => void;
 }
 
 export default function Lyrics({
@@ -52,6 +53,7 @@ export default function Lyrics({
   styles: stylesFromProps,
   classNames,
   onChange,
+  onDriverChange,
 }: ILyricsProps): ReactElement {
   const lastInteractTime = useRef<number>(0);
   const lastScrollIntoTime = useRef<number>(0);
@@ -73,7 +75,8 @@ export default function Lyrics({
     driver.insertStartIndicator();
     driver.glueLine();
     setLyricsDriver(driver);
-  }, [content]);
+    onDriverChange?.(driver);
+  }, [content, onDriverChange]);
 
   useEffect(() => {
     if (!lyricsDriver || !container) {
