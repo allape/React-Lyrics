@@ -89,8 +89,13 @@
             display: flex;
             justify-content: flex-start;
             align-items: center;
-            &.hasSpace {
-              margin: 0 6px;
+
+            &.hasLeadingSpace {
+              margin-left: 6px;
+            }
+
+            &.hasTrailingSpace {
+              margin-right: 6px;
             }
           }
 

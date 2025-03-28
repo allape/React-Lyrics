@@ -19,7 +19,34 @@ npm install github:allape/React-Lyrics
 
 ### Usage
 
-See [main.tsx](src/main.tsx).
+See [SimplePlayer](src/view/SimplePlayer/index.tsx) for complete demo.
+
+```tsx
+import { Lyrics, TimePoint, useRAFAudioTime } from '@allape/lyrics';
+import { ReactElement, useCallback } from 'react';
+
+export function Display({ text, karaoke }: Props): ReactElement {
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [current] = useRAFAudioTime(audio);
+
+  const handleChange = useCallback((tp: TimePoint) => {
+    if (!audio) {
+      return;
+    }
+    audio.currentTime = tp / 1000;
+  }, [audio]);
+
+  return <>
+    <auido ref={setAudio} src={url} controls/>
+    <Lyrics
+            current={current}
+            content={text}
+            karaoke={karaoke}
+            onChange={handleChange}
+    />
+  </>;
+}
+```
 
 ### Dev
 

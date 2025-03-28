@@ -30,7 +30,8 @@ export interface IClassNames {
   syllable?: string;
   karaoke?: string;
   truth?: string;
-  hasSpace?: string;
+  hasLeadingSpace?: string;
+  hasTrailingSpace?: string;
   mask?: string;
 }
 
@@ -162,7 +163,14 @@ export default function Lyrics({
               style={stylesFromProps?.line}
             >
               {l[2].map((i, syllableIndex) => {
-                const hasSpace = i[2].endsWith(" ") || i[2].startsWith(" ");
+                const spaceClassNames: Array<string | undefined> = [
+                  ...(i[2].startsWith(" ")
+                    ? [styles.hasLeadingSpace, classNames?.hasLeadingSpace]
+                    : []),
+                  ...(i[2].endsWith(" ")
+                    ? [styles.hasTrailingSpace, classNames?.hasTrailingSpace]
+                    : []),
+                ];
                 return (
                   <div
                     key={`line${lineIndex}_s${syllableIndex}`}
@@ -176,7 +184,7 @@ export default function Lyrics({
                       className={cls(
                         styles.truth,
                         classNames?.truth,
-                        hasSpace && [styles.hasSpace, classNames?.hasSpace],
+                        spaceClassNames,
                       )}
                       style={stylesFromProps?.syllable}
                     >
@@ -187,7 +195,7 @@ export default function Lyrics({
                         className={cls(
                           styles.mask,
                           classNames?.mask,
-                          hasSpace && [styles.hasSpace, classNames?.hasSpace],
+                          spaceClassNames,
                         )}
                         style={{
                           ...stylesFromProps?.mask,

@@ -1,5 +1,5 @@
 import { useProxy } from "@allape/use-loading";
-import { ReactElement, useCallback, useState } from "react";
+import { KeyboardEvent, ReactElement, useCallback, useState } from "react";
 import { LyricsDriver } from "../../../index.ts";
 import DroppableTextarea from "../../component/DroppableTextarea";
 import FileInput from "../../component/FileInput";
@@ -39,18 +39,54 @@ export default function SimplePlayer({
     console.log(driver.toString());
   }, []);
 
+  const handleKeyUp = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (!audioRef.current) {
+        return;
+      }
+
+      let touched = false;
+
+      switch (e.key) {
+        case " ": {
+          if (audioRef.current.paused) {
+            audioRef.current.play().then();
+          } else {
+            audioRef.current.pause();
+          }
+          touched = true;
+          break;
+        }
+      }
+
+      if (touched) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    },
+    [audioRef],
+  );
+
   return (
-    <div className={styles.wrapper}>
-      <FileInput value={url} onChange={setUrl} />
-      <hr />
-      <DroppableTextarea
-        className={styles.text}
-        rows={10}
-        placeholder="Add text or drop a LRC file here"
-        value={text}
-        onChange={setText}
-      ></DroppableTextarea>
-      <hr />
+    <div className={styles.wrapper} tabIndex={0} onKeyDownCapture={handleKeyUp}>
+      {!urlFromProps && (
+        <>
+          <FileInput value={url} onChange={setUrl} />
+          <hr />
+        </>
+      )}
+      {!content && (
+        <>
+          <DroppableTextarea
+            className={styles.text}
+            rows={10}
+            placeholder="Add text or drop a LRC file here"
+            value={text}
+            onChange={setText}
+          ></DroppableTextarea>
+          <hr />
+        </>
+      )}
       <audio ref={setAudio} className={styles.audio} src={url} controls></audio>
       <Lyrics
         current={current}
