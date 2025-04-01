@@ -12,13 +12,13 @@ export interface IFileInputProps
   extends Omit<HTMLProps<HTMLInputElement>, "value" | "onChange"> {
   value?: string;
   onChange?: (v: string) => void;
-  mime?: string;
+  onFile?: (fileOrURL: ArrayBuffer | string) => Promise<string> | string;
 }
 
 export default function FileInput({
   value,
   onChange,
-  mime = "audio/mpeg",
+  onFile,
   ...props
 }: IFileInputProps): ReactElement {
   const [text, setText] = useState<string>("");
@@ -41,10 +41,14 @@ export default function FileInput({
   }, [handleChange, value]);
 
   const handleBlur = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      handleChange(e.target.value);
+    async (e: ChangeEvent<HTMLInputElement>) => {
+      let url = e.target.value;
+      if (onFile) {
+        url = (await onFile(url)) || url;
+      }
+      handleChange(url);
     },
-    [handleChange],
+    [handleChange, onFile],
   );
 
   const handleFileChange = useCallback(
@@ -53,15 +57,31 @@ export default function FileInput({
 
       const files =
         "dataTransfer" in e ? e.dataTransfer?.files : e.currentTarget?.files;
-      const data = await files?.[0]?.arrayBuffer();
+      const file = files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      const data = await file.arrayBuffer();
 
       if (!data) {
         return;
       }
 
-      handleChange(URL.createObjectURL(new Blob([data], { type: mime })));
+      let url = "";
+
+      if (onFile) {
+        url = await onFile(data);
+      }
+
+      if (!url) {
+        url = URL.createObjectURL(new Blob([data], { type: file.type }));
+      }
+
+      handleChange(url);
     },
-    [handleChange, mime],
+    [handleChange, onFile],
   );
 
   return (

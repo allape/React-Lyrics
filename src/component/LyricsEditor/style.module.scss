@@ -22,6 +22,38 @@
     resize: vertical;
   }
 
+  .humanVoiceEnhance {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 6px;
+
+    .sep {
+      padding: 0 10px;
+    }
+
+    label {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    input {
+      cursor: pointer;
+    }
+
+    a {
+      color: white;
+    }
+  }
+
   .audio {
     width: calc(100% - 20px);
     position: sticky;
@@ -40,10 +72,6 @@
     @media (prefers-color-scheme: dark) {
       background-color: black;
       box-shadow: 0 0 10px 0 rgba(255, 255, 255, 0.5);
-    }
-
-    audio {
-      width: unset;
     }
   }
 

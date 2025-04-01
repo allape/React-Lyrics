@@ -6,6 +6,7 @@ import Spectrogram from "wavesurfer.js/dist/plugins/spectrogram.esm.js";
 export interface IWaveFormProps extends HTMLProps<HTMLDivElement> {
   url?: string;
   spectrogram?: boolean;
+  hover?: boolean;
   waveOptions?: Omit<WaveSurferOptions, "container" | "url">;
   onAudioLoaded?: (waveSurfer: WaveSurfer) => void;
 }
@@ -13,6 +14,7 @@ export interface IWaveFormProps extends HTMLProps<HTMLDivElement> {
 export default function WaveForm({
   url,
   spectrogram = true,
+  hover = true,
   waveOptions,
   onAudioLoaded,
   ...props
@@ -34,16 +36,20 @@ export default function WaveForm({
       autoScroll: true,
       autoCenter: true,
       mediaControls: true,
-      plugins: [
+      ...waveOptions,
+    });
+    s.getMediaElement().style.marginTop = "10px";
+
+    if (hover) {
+      s.registerPlugin(
         Hover.create({
           lineColor: "#ff0000",
           lineWidth: 2,
           labelBackground: "#555",
           labelColor: "#fff",
         }),
-      ],
-      ...waveOptions,
-    });
+      );
+    }
 
     if (spectrogram) {
       s.registerPlugin(
@@ -67,7 +73,7 @@ export default function WaveForm({
     return () => {
       s.destroy();
     };
-  }, [container, onAudioLoaded, spectrogram, url, waveOptions]);
+  }, [container, hover, onAudioLoaded, spectrogram, url, waveOptions]);
 
   return (
     <div ref={setContainer} {...props}>

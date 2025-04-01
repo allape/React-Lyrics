@@ -1,4 +1,4 @@
-import { useProxy } from "@allape/use-loading";
+import { useLoading, useProxy } from "@allape/use-loading";
 import cls from "classnames";
 import {
   DragEvent,
@@ -29,6 +29,8 @@ export interface ILyricsEditorProps {
 export default function LyricsEditor({
   onExport,
 }: ILyricsEditorProps): ReactElement {
+  const { loading, execute } = useLoading();
+
   const [text, textRef, setText] = useProxy<string>("");
   const [wordSplitterRegexp, wordSplitterRegexpRef, setWordSplitterRegexp] =
     useProxy<string>(DefaultWordSplitterRegexp.source);
@@ -47,6 +49,20 @@ export default function LyricsEditor({
   const timePointsRef = useRef<TimePoints>({});
 
   const titleRef = useRef<HTMLHeadingElement | null>(null);
+
+  const [spectrogram, setSpectrogram] = useState<boolean>(false);
+  const [hover, setHover] = useState<boolean>(false);
+
+  const [
+    humanVoiceEnhanceEnabled,
+    humanVoiceEnhanceEnabledRef,
+    setHumanVoiceEnhanceEnabled,
+  ] = useProxy<boolean>(false);
+  const [
+    humanVoiceEnhanceURL,
+    humanVoiceEnhanceURLRef,
+    setHumanVoiceEnhanceURL,
+  ] = useProxy<string>("/?text=human+sing");
 
   const handleBackToTop = useCallback(() => {
     titleRef.current?.scrollIntoView({
@@ -340,10 +356,68 @@ export default function LyricsEditor({
     [setAudio],
   );
 
+  const handleFile = useCallback(
+    async (fileOrURL: ArrayBuffer | string): Promise<string> => {
+      if (
+        !humanVoiceEnhanceEnabledRef.current ||
+        !humanVoiceEnhanceURLRef.current
+      ) {
+        return typeof fileOrURL === "string" ? fileOrURL : "";
+      }
+
+      try {
+        return await execute(async (): Promise<string> => {
+          if (typeof fileOrURL === "string") {
+            fileOrURL = await (await fetch(fileOrURL)).arrayBuffer();
+          }
+
+          const file = await (
+            await fetch(humanVoiceEnhanceURLRef.current, {
+              method: "PUT",
+              body: fileOrURL,
+            })
+          ).blob();
+
+          return URL.createObjectURL(file);
+        });
+      } catch (e) {
+        alert(`Error: ${e}`);
+        return "";
+      }
+    },
+    [execute, humanVoiceEnhanceEnabledRef, humanVoiceEnhanceURLRef],
+  );
+
   return (
     <div className={styles.wrapper}>
       <h2 ref={titleRef}>Lyrics Editor</h2>
-      <FileInput value={audioURL} onChange={setAudioURL} />
+      <FileInput value={audioURL} onChange={setAudioURL} onFile={handleFile} />
+      <hr />
+      <div className={styles.humanVoiceEnhance}>
+        <div className={styles.controls}>
+          <label onClick={() => setHumanVoiceEnhanceEnabled((i) => !i)}>
+            {loading ? "Enhancing..." : "Human Voice Enhance:"}
+          </label>
+          <input
+            type="checkbox"
+            checked={humanVoiceEnhanceEnabled}
+            onChange={() => setHumanVoiceEnhanceEnabled((i) => !i)}
+          />
+          <a
+            href="https://github.com/allape/sdui-pub/tree/pub/audiosep"
+            target="_blank"
+          >
+            How to Setup?
+          </a>
+        </div>
+        <input
+          disabled={!humanVoiceEnhanceEnabled}
+          placeholder="Human Voice Enhance URL"
+          type="text"
+          value={humanVoiceEnhanceURL}
+          onChange={(e) => setHumanVoiceEnhanceURL(e.target.value)}
+        />
+      </div>
       <hr />
       <label>Word Split RegExp:</label>
       <input
@@ -365,7 +439,27 @@ export default function LyricsEditor({
       ></textarea>
       <hr />
       <div className={styles.audio}>
-        <WaveForm url={audioURL} onAudioLoaded={handleAudioLoaded} />
+        <div className={styles.controls}>
+          <label onClick={() => setSpectrogram((i) => !i)}>Spectrogram:</label>
+          <input
+            type="checkbox"
+            checked={spectrogram}
+            onChange={() => setSpectrogram((i) => !i)}
+          />
+          <div className={styles.sep}>|</div>
+          <label onClick={() => setHover((i) => !i)}>Hover:</label>
+          <input
+            type="checkbox"
+            checked={hover}
+            onChange={() => setHover((i) => !i)}
+          />
+        </div>
+        <WaveForm
+          url={audioURL}
+          spectrogram={spectrogram}
+          hover={hover}
+          onAudioLoaded={handleAudioLoaded}
+        />
       </div>
       <hr />
       <p>[Space] to toggle player, [Shift] + [Arrow Keys] to seek player;</p>
