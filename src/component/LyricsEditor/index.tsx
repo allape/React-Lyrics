@@ -9,10 +9,17 @@ import {
   useState,
 } from "react";
 import WaveSurfer from "wavesurfer.js";
+import { RegionParams } from "wavesurfer.js/plugins/regions";
 import Lyrics, { Millisecond, TimePoint } from "../../core/lyrics.ts";
 import FileInput from "../FileInput";
 import WaveForm from "../Waveform";
 import styles from "./style.module.scss";
+
+export interface IWhisperSyllable {
+  start: TimePoint;
+  end: TimePoint;
+  text: string;
+}
 
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
@@ -54,16 +61,19 @@ export default function LyricsEditor({
     useProxy<boolean>(false);
   const [hover, setHover] = useState<boolean>(false);
 
-  const [
-    humanVoiceEnhanceEnabled,
-    humanVoiceEnhanceEnabledRef,
-    setHumanVoiceEnhanceEnabled,
-  ] = useProxy<boolean>(false);
-  const [
-    humanVoiceEnhanceURL,
-    humanVoiceEnhanceURLRef,
-    setHumanVoiceEnhanceURL,
-  ] = useProxy<string>("/?text=human+sing");
+  const [audioSepEnabled, audioSepEnabledRef, setAudioSepEnabled] =
+    useProxy<boolean>(false);
+  const [audioSepURL, audioSepURLRef, setAudioSepURL] = useProxy<string>(
+    "http://localhost:9090/?text=human+sing",
+  );
+
+  const [whisperEnabled, whisperEnabledRef, setWhisperEnabled] =
+    useProxy<boolean>(false);
+  const [whisperURL, whisperURLRef, setWhisperURL] = useProxy<string>(
+    "http://localhost:9090/zh/inference",
+  );
+
+  const [regions, setRegions] = useState<RegionParams[]>([]);
 
   const handleBackToTop = useCallback(() => {
     titleRef.current?.scrollIntoView({
@@ -363,34 +373,60 @@ export default function LyricsEditor({
 
   const handleFile = useCallback(
     async (fileOrURL: ArrayBuffer | string): Promise<string> => {
-      if (
-        !humanVoiceEnhanceEnabledRef.current ||
-        !humanVoiceEnhanceURLRef.current
-      ) {
-        return typeof fileOrURL === "string" ? fileOrURL : "";
-      }
-
       try {
         return await execute(async (): Promise<string> => {
           if (typeof fileOrURL === "string") {
             fileOrURL = await (await fetch(fileOrURL)).arrayBuffer();
           }
 
-          const file = await (
-            await fetch(humanVoiceEnhanceURLRef.current, {
-              method: "PUT",
-              body: fileOrURL,
-            })
-          ).blob();
+          if (whisperEnabledRef.current && whisperURLRef.current) {
+            try {
+              const whisperSyllables: IWhisperSyllable[] = await (
+                await fetch(whisperURLRef.current, {
+                  method: "PUT",
+                  body: fileOrURL,
+                })
+              ).json();
 
-          return URL.createObjectURL(file);
+              setRegions(
+                whisperSyllables.map((syll) => ({
+                  start: syll.start / 1000,
+                  end: syll.end / 1000,
+                  content: syll.text,
+                  drag: false,
+                  resize: false,
+                })),
+              );
+            } catch (e) {
+              alert(`Error: ${e}`);
+            }
+          }
+
+          if (audioSepEnabledRef.current && audioSepURLRef.current) {
+            const file = await (
+              await fetch(audioSepURLRef.current, {
+                method: "PUT",
+                body: fileOrURL,
+              })
+            ).blob();
+
+            return URL.createObjectURL(file);
+          }
+
+          return "";
         });
       } catch (e) {
         alert(`Error: ${e}`);
         return "";
       }
     },
-    [execute, humanVoiceEnhanceEnabledRef, humanVoiceEnhanceURLRef],
+    [
+      execute,
+      whisperEnabledRef,
+      whisperURLRef,
+      audioSepEnabledRef,
+      audioSepURLRef,
+    ],
   );
 
   return (
@@ -398,15 +434,17 @@ export default function LyricsEditor({
       <h2 ref={titleRef}>Lyrics Editor</h2>
       <FileInput value={audioURL} onChange={setAudioURL} onFile={handleFile} />
       <hr />
-      <div className={styles.humanVoiceEnhance}>
+      <div className={styles.advanced}>
         <div className={styles.controls}>
-          <label onClick={() => setHumanVoiceEnhanceEnabled((i) => !i)}>
-            {loading ? "Enhancing..." : "Human Voice Enhance:"}
+          <label onClick={() => setAudioSepEnabled((i) => !i)}>
+            {loading && audioSepEnabled
+              ? "Enhancing..."
+              : "Human Voice Enhance:"}
           </label>
           <input
             type="checkbox"
-            checked={humanVoiceEnhanceEnabled}
-            onChange={() => setHumanVoiceEnhanceEnabled((i) => !i)}
+            checked={audioSepEnabled}
+            onChange={() => setAudioSepEnabled((i) => !i)}
           />
           <a
             href="https://github.com/allape/sdui-pub/tree/pub/audiosep"
@@ -416,11 +454,37 @@ export default function LyricsEditor({
           </a>
         </div>
         <input
-          disabled={!humanVoiceEnhanceEnabled}
+          disabled={!audioSepEnabled}
           placeholder="Human Voice Enhance URL"
           type="text"
-          value={humanVoiceEnhanceURL}
-          onChange={(e) => setHumanVoiceEnhanceURL(e.target.value)}
+          value={audioSepURL}
+          onChange={(e) => setAudioSepURL(e.target.value)}
+        />
+      </div>
+      <hr/>
+      <div className={styles.advanced}>
+        <div className={styles.controls}>
+          <label onClick={() => setWhisperEnabled((i) => !i)}>
+            {loading && whisperEnabled ? "Whispering..." : "Speech to Text:"}
+          </label>
+          <input
+            type="checkbox"
+            checked={whisperEnabled}
+            onChange={() => setWhisperEnabled((i) => !i)}
+          />
+          <a
+            href="https://github.com/allape/sdui-pub/tree/pub/whisper"
+            target="_blank"
+          >
+            How to Setup?
+          </a>
+        </div>
+        <input
+          disabled={!whisperEnabled}
+          placeholder="Whisper URL"
+          type="text"
+          value={whisperURL}
+          onChange={(e) => setWhisperURL(e.target.value)}
         />
       </div>
       <hr />
@@ -463,6 +527,7 @@ export default function LyricsEditor({
           url={audioURL}
           spectrogram={spectrogram}
           hover={hover}
+          regions={regions}
           onAudioLoaded={handleAudioLoaded}
         />
       </div>

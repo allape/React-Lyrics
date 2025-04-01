@@ -1,12 +1,17 @@
 import { HTMLProps, ReactElement, useEffect, useRef, useState } from "react";
 import WaveSurfer, { WaveSurferOptions } from "wavesurfer.js";
 import Hover from "wavesurfer.js/dist/plugins/hover.esm.js";
+import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import Spectrogram from "wavesurfer.js/dist/plugins/spectrogram.esm.js";
+import { RegionParams } from "wavesurfer.js/plugins/regions";
+
+const RegionsP = RegionsPlugin.create();
 
 export interface IWaveFormProps extends HTMLProps<HTMLDivElement> {
   url?: string;
   spectrogram?: boolean;
   hover?: boolean;
+  regions?: RegionParams[];
   waveOptions?: Omit<WaveSurferOptions, "container" | "url">;
   onAudioLoaded?: (waveSurfer: WaveSurfer) => void;
 }
@@ -15,6 +20,7 @@ export default function WaveForm({
   url,
   spectrogram = true,
   hover = true,
+  regions,
   waveOptions,
   onAudioLoaded,
   ...props
@@ -36,6 +42,7 @@ export default function WaveForm({
       autoScroll: true,
       autoCenter: true,
       mediaControls: true,
+      plugins: [RegionsP],
       ...waveOptions,
     });
     s.getMediaElement().style.marginTop = "10px";
@@ -66,6 +73,12 @@ export default function WaveForm({
       );
     }
 
+    s.on("decode", () => {
+      regions?.forEach((region) => {
+        RegionsP.addRegion(region);
+      });
+    });
+
     surfer.current = s;
 
     onAudioLoaded?.(s);
@@ -73,7 +86,7 @@ export default function WaveForm({
     return () => {
       s.destroy();
     };
-  }, [container, hover, onAudioLoaded, spectrogram, url, waveOptions]);
+  }, [container, hover, onAudioLoaded, regions, spectrogram, url, waveOptions]);
 
   return (
     <div ref={setContainer} {...props}>
