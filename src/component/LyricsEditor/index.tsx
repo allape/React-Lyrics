@@ -50,7 +50,8 @@ export default function LyricsEditor({
 
   const titleRef = useRef<HTMLHeadingElement | null>(null);
 
-  const [spectrogram, setSpectrogram] = useState<boolean>(false);
+  const [spectrogram, spectrogramRef, setSpectrogram] =
+    useProxy<boolean>(false);
   const [hover, setHover] = useState<boolean>(false);
 
   const [
@@ -323,12 +324,15 @@ export default function LyricsEditor({
         setSyllableIndex(0);
       }
 
-      document
-        .querySelector(`[data-line=index-${lineIndexRef.current}]`)
-        ?.scrollIntoView({
+      const ele = document.querySelector(
+        `[data-line=index-${lineIndexRef.current}]`,
+      );
+      if (ele) {
+        (ele.nextElementSibling || ele).scrollIntoView({
           behavior: "smooth",
-          block: "center",
+          block: spectrogramRef.current ? "end" : "center",
         });
+      }
     };
 
     editor.addEventListener("keydown", handleKeyDown);
@@ -347,6 +351,7 @@ export default function LyricsEditor({
     editor,
     handleTogglePlay,
     audioRef,
+    spectrogramRef,
   ]);
 
   const handleAudioLoaded = useCallback(
