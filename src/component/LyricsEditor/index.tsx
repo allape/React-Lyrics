@@ -461,7 +461,7 @@ export default function LyricsEditor({
           onChange={(e) => setAudioSepURL(e.target.value)}
         />
       </div>
-      <hr/>
+      <hr />
       <div className={styles.advanced}>
         <div className={styles.controls}>
           <label onClick={() => setWhisperEnabled((i) => !i)}>
@@ -527,7 +527,7 @@ export default function LyricsEditor({
           url={audioURL}
           spectrogram={spectrogram}
           hover={hover}
-          regions={regions}
+          regions={whisperEnabled ? regions : undefined}
           onAudioLoaded={handleAudioLoaded}
         />
       </div>
