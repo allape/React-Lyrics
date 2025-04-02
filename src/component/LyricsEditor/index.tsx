@@ -23,9 +23,12 @@ export interface IWhisperSyllable {
 
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
-export const DefaultWordSplitterRegexp = /([a-zA-Z'?,;.]+|\S[。，]?)\s*/gi;
+export const DefaultWordSplitterRegexp =
+  /([a-zA-Z'?,;.~]+|\S[。，]?[~.]*)\s*\s*/gi;
 
 export interface ILyricsEditorProps {
+  audioSepURL?: string;
+  whisperURL?: string;
   onExport?: (
     lyrics: string,
     lines: string[][],
@@ -34,6 +37,8 @@ export interface ILyricsEditorProps {
 }
 
 export default function LyricsEditor({
+  audioSepURL: audioSepURLFromProps,
+  whisperURL: whisperURLFromProps,
   onExport,
 }: ILyricsEditorProps): ReactElement {
   const { loading, execute } = useLoading();
@@ -64,13 +69,13 @@ export default function LyricsEditor({
   const [audioSepEnabled, audioSepEnabledRef, setAudioSepEnabled] =
     useProxy<boolean>(false);
   const [audioSepURL, audioSepURLRef, setAudioSepURL] = useProxy<string>(
-    "http://localhost:9090/?text=human+sing",
+    audioSepURLFromProps || "http://localhost:9090/?text=human+sing",
   );
 
   const [whisperEnabled, whisperEnabledRef, setWhisperEnabled] =
     useProxy<boolean>(false);
   const [whisperURL, whisperURLRef, setWhisperURL] = useProxy<string>(
-    "http://localhost:9090/zh/inference",
+    whisperURLFromProps || "http://localhost:9090/zh/inference",
   );
 
   const [regions, setRegions] = useState<RegionParams[]>([]);
