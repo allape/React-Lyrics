@@ -65,13 +65,6 @@
         position: relative;
 
         &:not(.karaoke) {
-          .truth {
-            color: #000;
-            @media (prefers-color-scheme: dark) {
-              color: #fff;
-            }
-          }
-
           .mask {
             display: none;
           }
@@ -114,10 +107,6 @@
             left: 0;
             width: 0;
             height: 100%;
-            color: #000;
-            @media (prefers-color-scheme: dark) {
-              color: #fff;
-            }
           }
         }
       }
