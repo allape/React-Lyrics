@@ -24,7 +24,7 @@ export interface IWhisperSyllable {
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
 export const DefaultWordSplitterRegexp =
-  /([a-zA-Z'?,;.~]+|\S[。，]?[~.]*)\s*\s*/gi;
+  /([a-zA-Z'?,;.~]+|\S[。，]?[！～~.]*)\s*/gi;
 
 export interface ILyricsEditorProps {
   audioSepURL?: string;

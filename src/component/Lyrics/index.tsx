@@ -73,11 +73,15 @@ export default function Lyrics({
       return;
     }
     const driver = LyricsDriver.parse(content);
-    driver.insertStartIndicator();
+    if (karaoke) {
+      driver.insertStartIndicator();
+    } else {
+      driver.insertStartIndicator(500, []);
+    }
     driver.glueLine();
     setLyricsDriver(driver);
     onDriverChange?.(driver);
-  }, [content, onDriverChange]);
+  }, [content, karaoke, onDriverChange]);
 
   useEffect(() => {
     if (!lyricsDriver || !container) {

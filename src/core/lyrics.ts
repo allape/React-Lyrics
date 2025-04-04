@@ -12,9 +12,26 @@ export default class Lyrics {
   /**
    * Glue lines with the gap less than diff, the previous end time point as the start time point of the next line
    * @param diff the gap between two lines, use negative number to glue all lines with no gap
+   * @param syllableDiff the gap between two syllables, this number always equal to 0 or greater than 0
    */
-  public glueLine(diff: Millisecond | -1 = -1): Line[] {
+  public glueLine(
+    diff: Millisecond | -1 = -1,
+    syllableDiff: Millisecond = 100,
+  ): Line[] {
+    syllableDiff = Math.max(0, syllableDiff);
+
     this.lines.forEach((line, index, lines) => {
+      line[2].forEach((syllable, syllableIndex, syllables) => {
+        if (syllableIndex === 0) {
+          return;
+        }
+
+        const prevSyllable = syllables[syllableIndex - 1];
+        if (syllableDiff <= Math.abs(syllable[0] - prevSyllable[1])) {
+          syllable[0] = prevSyllable[1];
+        }
+      });
+
       if (index === 0) {
         return;
       }
@@ -64,18 +81,23 @@ export default class Lyrics {
         if (fillRestGapWith) {
           newLines.push([lastEtp, ls, [[lastEtp, ls, fillRestGapWith]]]);
         }
-        newLines.push(
-          [
-            ls,
-            le,
-            indicators.map((i, index) => {
-              const st = ls + index * 1000;
-              const et = st + 1000;
-              return [st, et, i];
-            }),
-          ],
-          cLine,
-        );
+
+        if (indicators.length > 0) {
+          newLines.push(
+            [
+              ls,
+              le,
+              indicators.map((i, index) => {
+                const st = ls + index * 1000;
+                const et = st + 1000;
+                return [st, et, i];
+              }),
+            ],
+            cLine,
+          );
+        } else {
+          newLines.push(cLine);
+        }
       } else {
         newLines.push(cLine);
       }
