@@ -76,7 +76,7 @@ export default function Lyrics({
     if (karaoke) {
       driver.insertStartIndicator();
     } else {
-      driver.insertStartIndicator(500, []);
+      driver.insertStartIndicator(2000, []);
     }
     driver.glueLine();
     setLyricsDriver(driver);
