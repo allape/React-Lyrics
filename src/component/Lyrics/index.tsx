@@ -16,7 +16,6 @@ import styles from "./style.module.scss";
 
 export const InteractedThreshold: Millisecond = 1500;
 export const ScrollIntoThreshold: Millisecond = 200;
-export const NormalHumanDelay: Millisecond = 100;
 
 export type LineIndex = number;
 
@@ -88,8 +87,7 @@ export default function Lyrics({
       return;
     }
 
-    const now: Millisecond =
-      current + offset + (karaoke ? NormalHumanDelay : 0);
+    const now: Millisecond = current + offset;
 
     const indexes = lyricsDriver.getLineIndexesByTimePoint(now);
 
@@ -163,7 +161,7 @@ export default function Lyrics({
                 classNames?.currentx?.[distanceFromCurrent],
               )}
               data-lyrics={`index-${lineIndex}`}
-              onClick={() => onChange?.(l[0] + offset - NormalHumanDelay)}
+              onClick={() => onChange?.(l[0] + offset)}
               style={stylesFromProps?.line}
             >
               {l[2].map((i, syllableIndex) => {
