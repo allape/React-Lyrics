@@ -27,7 +27,7 @@ export default class Lyrics {
         }
 
         const prevSyllable = syllables[syllableIndex - 1];
-        if (syllableDiff <= Math.abs(syllable[0] - prevSyllable[1])) {
+        if (syllableDiff >= Math.abs(syllable[0] - prevSyllable[1])) {
           syllable[0] = prevSyllable[1];
         }
       });
