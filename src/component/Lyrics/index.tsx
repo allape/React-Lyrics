@@ -17,6 +17,8 @@ import styles from "./style.module.scss";
 export const InteractedThreshold: Millisecond = 1500;
 export const ScrollIntoThreshold: Millisecond = 200;
 
+export const HumanDelay: Millisecond = 100;
+
 export type LineIndex = number;
 
 export interface IClassNames {
@@ -87,7 +89,7 @@ export default function Lyrics({
       return;
     }
 
-    const now: Millisecond = current + offset;
+    const now: Millisecond = current + offset + HumanDelay;
 
     const indexes = lyricsDriver.getLineIndexesByTimePoint(now);
 
