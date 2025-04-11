@@ -236,24 +236,28 @@ export default function LyricsEditor({
       let touched = false;
 
       if (e.shiftKey) {
-        switch (e.key) {
-          case " ":
+        switch (e.code) {
+          case "Space":
             handleTogglePlay();
             touched = true;
             break;
+          case "KeyA":
           case "ArrowLeft":
             handleSeek(-3_000);
             touched = true;
             break;
+          case "KeyW":
           case "ArrowUp":
             handleSeek(-10_000);
             touched = true;
             break;
 
+          case "KeyD":
           case "ArrowRight":
             handleSeek(3_000);
             touched = true;
             break;
+          case "KeyS":
           case "ArrowDown":
             if (!isKeyDown) {
               handleSeek(10_000);
@@ -262,17 +266,19 @@ export default function LyricsEditor({
             }
         }
       } else {
-        switch (e.key) {
-          case " ":
+        switch (e.code) {
+          case "Space":
             handleTogglePlay();
             touched = true;
             break;
+          case "KeyA":
           case "ArrowLeft":
             timePointsRef.current[lineIndexRef.current] = {};
             handleSeek(-3_000);
             setSyllableIndex(0);
             touched = true;
             break;
+          case "KeyW":
           case "ArrowUp":
             timePointsRef.current[lineIndexRef.current] = {};
             setSyllableIndex(0);
@@ -286,8 +292,9 @@ export default function LyricsEditor({
             });
             touched = true;
             break;
-
+          case "KeyD":
           case "ArrowRight":
+          case "KeyS":
           case "ArrowDown":
             if (!isKeyDown) {
               isKeyDown = true;
@@ -324,7 +331,7 @@ export default function LyricsEditor({
         return;
       }
 
-      if (e.key === "ArrowRight") {
+      if (e.code === "ArrowRight" || e.code === "KeyD") {
         if (
           syllableIndexRef.current + 1 >=
           linesRef.current[lineIndexRef.current].length
@@ -334,7 +341,7 @@ export default function LyricsEditor({
         } else {
           setSyllableIndex(syllableIndexRef.current + 1);
         }
-      } else if (e.key === "ArrowDown") {
+      } else if (e.code === "ArrowDown" || e.code === "KeyS") {
         setLineIndex(lineIndexRef.current + 1);
         setSyllableIndex(0);
       }
