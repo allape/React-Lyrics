@@ -175,8 +175,14 @@ export default function LyricsEditor({
         const syllables: string[] = [];
         for (let i = 0; i < line.length; i++) {
           let syllable = line[i];
-          const st = Lyrics.toStringTimePoint(tps[i][1][0]);
-          const et = Lyrics.toStringTimePoint(tps[i][1][1]);
+          const st =
+            tps[i]?.[1]?.[0] !== undefined
+              ? Lyrics.toStringTimePoint(tps[i][1][0])
+              : "";
+          const et =
+            tps[i]?.[1]?.[1] !== undefined
+              ? Lyrics.toStringTimePoint(tps[i][1][1])
+              : "";
           if (i === tps.length - 1) {
             syllable = line.slice(i).join("");
             i = line.length;
