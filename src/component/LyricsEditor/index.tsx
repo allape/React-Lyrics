@@ -15,6 +15,35 @@ import FileInput from "../FileInput";
 import WaveForm from "../Waveform";
 import styles from "./style.module.scss";
 
+type KeyFunction = "Up" | "Right" | "Down" | "Left" | "Space";
+
+function KeyCodeToFunction(code: KeyboardEvent["code"]): KeyFunction | null {
+  switch (code) {
+    case "Space":
+      return "Space";
+
+    case "KeyA":
+    case "ArrowLeft":
+      return "Left";
+
+    case "KeyW":
+    case "ArrowUp":
+      return "Up";
+
+    case "KeyD":
+    case "ArrowRight":
+    case "Enter":
+      return "Right";
+
+    case "KeyS":
+    case "ArrowDown":
+      return "Down";
+
+    default:
+      return null;
+  }
+}
+
 export interface IWhisperSyllable {
   start: TimePoint;
   end: TimePoint;
@@ -242,29 +271,25 @@ export default function LyricsEditor({
       let touched = false;
 
       if (e.shiftKey) {
-        switch (e.code) {
+        switch (KeyCodeToFunction(e.code)) {
           case "Space":
             handleTogglePlay();
             touched = true;
             break;
-          case "KeyA":
-          case "ArrowLeft":
+          case "Left":
             handleSeek(-3_000);
             touched = true;
             break;
-          case "KeyW":
-          case "ArrowUp":
+          case "Up":
             handleSeek(-10_000);
             touched = true;
             break;
 
-          case "KeyD":
-          case "ArrowRight":
+          case "Right":
             handleSeek(3_000);
             touched = true;
             break;
-          case "KeyS":
-          case "ArrowDown":
+          case "Down":
             if (!isKeyDown) {
               handleSeek(10_000);
               touched = true;
@@ -272,20 +297,18 @@ export default function LyricsEditor({
             }
         }
       } else {
-        switch (e.code) {
+        switch (KeyCodeToFunction(e.code)) {
           case "Space":
             handleTogglePlay();
             touched = true;
             break;
-          case "KeyA":
-          case "ArrowLeft":
+          case "Left":
             timePointsRef.current[lineIndexRef.current] = {};
             handleSeek(-3_000);
             setSyllableIndex(0);
             touched = true;
             break;
-          case "KeyW":
-          case "ArrowUp":
+          case "Up":
             timePointsRef.current[lineIndexRef.current] = {};
             setSyllableIndex(0);
             setLineIndex((i) => {
@@ -297,11 +320,10 @@ export default function LyricsEditor({
               return i;
             });
             touched = true;
+            isKeyDown = true;
             break;
-          case "KeyD":
-          case "ArrowRight":
-          case "KeyS":
-          case "ArrowDown":
+          case "Right":
+          case "Down":
             if (!isKeyDown) {
               isKeyDown = true;
               keyDownTime = audioRef.current.currentTime * 1000;
@@ -332,24 +354,27 @@ export default function LyricsEditor({
         ],
       };
 
-      if (lineIndexRef.current >= linesRef.current.length) {
-        setLineIndex(lineIndexRef.current + 1);
-        return;
-      }
+      const func = KeyCodeToFunction(e.code);
 
-      if (e.code === "ArrowRight" || e.code === "KeyD") {
-        if (
-          syllableIndexRef.current + 1 >=
-          linesRef.current[lineIndexRef.current].length
-        ) {
+      if (lineIndexRef.current >= linesRef.current.length) {
+        if (func !== "Up") {
+          setLineIndex(linesRef.current.length);
+        }
+      } else {
+        if (func === "Right") {
+          if (
+            syllableIndexRef.current + 1 >=
+            linesRef.current[lineIndexRef.current].length
+          ) {
+            setLineIndex(lineIndexRef.current + 1);
+            setSyllableIndex(0);
+          } else {
+            setSyllableIndex(syllableIndexRef.current + 1);
+          }
+        } else if (func === "Down") {
           setLineIndex(lineIndexRef.current + 1);
           setSyllableIndex(0);
-        } else {
-          setSyllableIndex(syllableIndexRef.current + 1);
         }
-      } else if (e.code === "ArrowDown" || e.code === "KeyS") {
-        setLineIndex(lineIndexRef.current + 1);
-        setSyllableIndex(0);
       }
 
       const ele = document.querySelector(
