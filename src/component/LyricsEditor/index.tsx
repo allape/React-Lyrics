@@ -15,29 +15,91 @@ import FileInput from "../FileInput";
 import WaveForm from "../Waveform";
 import styles from "./style.module.scss";
 
-type KeyFunction = "Up" | "Right" | "Down" | "Left" | "Space";
+const ForwardMore = 10_000;
+const BackwardMore = -ForwardMore;
+const Forward = 3_000;
+const Backward = -Forward;
 
-function KeyCodeToFunction(code: KeyboardEvent["code"]): KeyFunction | null {
+function KeyboardEventToMask(e: KeyboardEvent): KeyMask {
+  return {
+    ctrl: e.ctrlKey,
+    shift: e.shiftKey,
+    meta: e.metaKey,
+  };
+}
+
+type KeyFunction =
+  | "RevokeLine"
+  | "NextSyllable"
+  | "NextLine"
+  | "ClearLine"
+  | "PlayPause"
+  | "Forward"
+  | "ForwardMore"
+  | "Backward"
+  | "BackwardMore"
+  | "Focus"
+  | "RevokeSyllable";
+
+type KeyMask = { ctrl?: boolean; shift?: boolean; meta?: boolean };
+
+function KeyCodeToFunction(
+  code: KeyboardEvent["code"],
+  mask: KeyMask,
+): KeyFunction | null {
   switch (code) {
     case "Space":
-      return "Space";
+    case "Numpad0":
+    case "Numpad5":
+      return "PlayPause";
 
     case "KeyA":
     case "ArrowLeft":
-      return "Left";
+    case "Numpad4":
+      if (mask.shift) {
+        return "Backward";
+      }
+      return "ClearLine";
 
     case "KeyW":
     case "ArrowUp":
-      return "Up";
+    case "Numpad8":
+      if (mask.shift) {
+        return "BackwardMore";
+      }
+      return "RevokeLine";
 
     case "KeyD":
     case "ArrowRight":
     case "Enter":
-      return "Right";
+    case "NumpadEnter":
+    case "Numpad6":
+      if (mask.shift) {
+        return "Forward";
+      }
+      return "NextSyllable";
 
     case "KeyS":
+    case "Numpad2":
     case "ArrowDown":
-      return "Down";
+      if (mask.shift) {
+        return "ForwardMore";
+      }
+      return "NextLine";
+
+    case "NumpadAdd":
+    case "Equal":
+      return "ForwardMore";
+    case "NumpadSubtract":
+    case "Minus":
+      return "BackwardMore";
+
+    case "Escape":
+      return "Focus";
+
+    case "Backspace":
+    case "Delete":
+      return "RevokeSyllable";
 
     default:
       return null;
@@ -255,6 +317,18 @@ export default function LyricsEditor({
     }
   }, [audioRef]);
 
+  const scrollToCurrentLine = useCallback(() => {
+    const ele = document.querySelector(
+      `[data-line=index-${lineIndexRef.current}]`,
+    );
+    if (ele) {
+      (ele.nextElementSibling || ele).scrollIntoView({
+        behavior: "smooth",
+        block: spectrogramRef.current ? "end" : "center",
+      });
+    }
+  }, [lineIndexRef, spectrogramRef]);
+
   useEffect(() => {
     if (!editor) {
       return;
@@ -270,67 +344,72 @@ export default function LyricsEditor({
 
       let touched = false;
 
-      if (e.shiftKey) {
-        switch (KeyCodeToFunction(e.code)) {
-          case "Space":
-            handleTogglePlay();
-            touched = true;
-            break;
-          case "Left":
-            handleSeek(-3_000);
-            touched = true;
-            break;
-          case "Up":
-            handleSeek(-10_000);
-            touched = true;
-            break;
+      const func = KeyCodeToFunction(e.code, KeyboardEventToMask(e));
 
-          case "Right":
-            handleSeek(3_000);
-            touched = true;
-            break;
-          case "Down":
-            if (!isKeyDown) {
-              handleSeek(10_000);
-              touched = true;
-              break;
+      switch (func) {
+        case "Backward":
+          handleSeek(Backward);
+          touched = true;
+          break;
+        case "BackwardMore":
+          handleSeek(BackwardMore);
+          touched = true;
+          break;
+        case "Forward":
+          handleSeek(Forward);
+          touched = true;
+          break;
+        case "ForwardMore":
+          handleSeek(ForwardMore);
+          touched = true;
+          break;
+
+        case "PlayPause":
+          handleTogglePlay();
+          touched = true;
+          break;
+
+        case "ClearLine":
+          timePointsRef.current[lineIndexRef.current] = {};
+          setSyllableIndex(0);
+          handleSeek(Backward);
+          touched = true;
+          break;
+
+        case "RevokeSyllable":
+          setSyllableIndex((v) => {
+            const line = timePointsRef.current[lineIndexRef.current];
+            if (line) {
+              delete line[v];
             }
-        }
-      } else {
-        switch (KeyCodeToFunction(e.code)) {
-          case "Space":
-            handleTogglePlay();
-            touched = true;
-            break;
-          case "Left":
-            timePointsRef.current[lineIndexRef.current] = {};
-            handleSeek(-3_000);
-            setSyllableIndex(0);
-            touched = true;
-            break;
-          case "Up":
-            timePointsRef.current[lineIndexRef.current] = {};
-            setSyllableIndex(0);
-            setLineIndex((i) => {
-              i = i - 1;
-              if (i < 0) {
-                i = 0;
-              }
-              timePointsRef.current[i] = {};
-              return i;
-            });
-            touched = true;
+            return Math.max(v - 1, 0);
+          });
+          touched = true;
+          break;
+
+        case "RevokeLine":
+          timePointsRef.current[lineIndexRef.current] = {};
+          setSyllableIndex(0);
+          setLineIndex((i) => {
+            i = i - 1;
+            if (i < 0) {
+              i = 0;
+            }
+            timePointsRef.current[i] = {};
+            return i;
+          });
+          touched = true;
+          isKeyDown = true;
+          break;
+
+        case "NextSyllable":
+        case "NextLine":
+          if (!isKeyDown) {
             isKeyDown = true;
-            break;
-          case "Right":
-          case "Down":
-            if (!isKeyDown) {
-              isKeyDown = true;
-              keyDownTime = audioRef.current.currentTime * 1000;
-            }
-            touched = true;
-            break;
-        }
+            keyDownTime = audioRef.current.currentTime * 1000;
+          }
+          touched = true;
+          break;
       }
 
       if (touched) {
@@ -354,14 +433,14 @@ export default function LyricsEditor({
         ],
       };
 
-      const func = KeyCodeToFunction(e.code);
+      const func = KeyCodeToFunction(e.code, KeyboardEventToMask(e));
 
       if (lineIndexRef.current >= linesRef.current.length) {
-        if (func !== "Up") {
+        if (func !== "RevokeLine") {
           setLineIndex(linesRef.current.length);
         }
       } else {
-        if (func === "Right") {
+        if (func === "NextSyllable") {
           if (
             syllableIndexRef.current + 1 >=
             linesRef.current[lineIndexRef.current].length
@@ -371,28 +450,39 @@ export default function LyricsEditor({
           } else {
             setSyllableIndex(syllableIndexRef.current + 1);
           }
-        } else if (func === "Down") {
+        } else if (func === "NextLine") {
           setLineIndex(lineIndexRef.current + 1);
           setSyllableIndex(0);
         }
       }
 
-      const ele = document.querySelector(
-        `[data-line=index-${lineIndexRef.current}]`,
-      );
-      if (ele) {
-        (ele.nextElementSibling || ele).scrollIntoView({
-          behavior: "smooth",
-          block: spectrogramRef.current ? "end" : "center",
-        });
-      }
+      scrollToCurrentLine();
     };
 
     editor.addEventListener("keydown", handleKeyDown);
     editor.addEventListener("keyup", handleKeyUp);
+
+    let scrollerTimer = -1;
+
+    const handleWindowKeyup = (e: KeyboardEvent) => {
+      if (KeyCodeToFunction(e.code, KeyboardEventToMask(e)) === "Focus") {
+        editor.focus();
+        clearTimeout(scrollerTimer);
+        scrollerTimer = setTimeout(
+          () => scrollToCurrentLine(),
+          100,
+        ) as unknown as number;
+      }
+    };
+
+    window.addEventListener("keyup", handleWindowKeyup);
     return () => {
+      clearTimeout(scrollerTimer);
+
       editor.removeEventListener("keydown", handleKeyDown);
       editor.removeEventListener("keyup", handleKeyUp);
+
+      window.removeEventListener("keyup", handleWindowKeyup);
     };
   }, [
     handleSeek,
@@ -405,6 +495,7 @@ export default function LyricsEditor({
     handleTogglePlay,
     audioRef,
     spectrogramRef,
+    scrollToCurrentLine,
   ]);
 
   const handleAudioLoaded = useCallback(
