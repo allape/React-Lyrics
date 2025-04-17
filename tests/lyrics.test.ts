@@ -46,31 +46,31 @@ describe("test lyrics", () => {
   test("parse", () => {
     const l = Lyrics.parse(Example);
     expect(l.lines.length).toBe(6);
-    expect(l.lines[0][0]).toBe(0);
-    expect(l.lines[0][1]).toBe(3_100);
-    expect(l.lines[0][2][0][0]).toBe(0);
-    expect(l.lines[0][2][0][1]).toBe(3_100);
-    expect(l.lines[0][2][0][2]).toBe(" 谁のことを考えてるの?");
-    expect(l.lines[5][2][0][0]).toBe(16_730);
-    expect(l.lines[5][2][0][1]).toBe(0);
-    expect(l.lines[5][2][0][2]).toBe(" アイツの心に 居场所がないんだ");
-    expect(l.lines[5][0]).toBe(16_730);
-    expect(l.lines[5][1]).toBe(0);
+    expect(l.lines[0].st).toBe(0);
+    expect(l.lines[0].et).toBe(3_100);
+    expect(l.lines[0].syllables[0].st).toBe(0);
+    expect(l.lines[0].syllables[0].et).toBe(3_100);
+    expect(l.lines[0].syllables[0].text).toBe(" 谁のことを考えてるの?");
+    expect(l.lines[5].syllables[0].st).toBe(16_730);
+    expect(l.lines[5].syllables[0].et).toBe(0);
+    expect(l.lines[5].syllables[0].text).toBe(" アイツの心に 居场所がないんだ");
+    expect(l.lines[5].st).toBe(16_730);
+    expect(l.lines[5].et).toBe(0);
 
     const l1 = l.getLinesByTimePoint(2_000)[0];
-    expect(l1?.[0]).toBe(0);
-    expect(l1?.[1]).toBe(3_100);
-    expect(l1?.[2][0][2]).toBe(" 谁のことを考えてるの?");
+    expect(l1?.st).toBe(0);
+    expect(l1?.et).toBe(3_100);
+    expect(l1?.syllables[0].text).toBe(" 谁のことを考えてるの?");
 
     const l3 = l.getLinesByTimePoint(6_000)[0];
-    expect(l3?.[0]).toBe(5_760);
-    expect(l3?.[1]).toBe(10_560);
-    expect(l3?.[2][0][2]).toBe(" 戦况的に 一进一退で");
+    expect(l3?.st).toBe(5_760);
+    expect(l3?.et).toBe(10_560);
+    expect(l3?.syllables[0].text).toBe(" 戦况的に 一进一退で");
 
     const l6 = l.getLinesByTimePoint(17_000)[0];
-    expect(l6?.[0]).toBe(16_730);
-    expect(l6?.[1]).toBe(0);
-    expect(l6?.[2][0][2]).toBe(" アイツの心に 居场所がないんだ");
+    expect(l6?.st).toBe(16_730);
+    expect(l6?.et).toBe(0);
+    expect(l6?.syllables[0].text).toBe(" アイツの心に 居场所がないんだ");
 
     expect(l.getLineIndexesByTimePoint(2_000)[0]).toBe(0);
     expect(l.getLineIndexesByTimePoint(17_000)[0]).toBe(5);
@@ -87,8 +87,8 @@ describe("test lyrics", () => {
     const l1 = Lyrics.parseStandardLRC(ExampleLRC);
 
     expect(l1.lines.length).toBe(4)
-    expect(l1.lines[0][0]).toBe(12_000);
-    expect(l1.lines[3][0]).toBe(45_100);
+    expect(l1.lines[0].st).toBe(12_000);
+    expect(l1.lines[3].st).toBe(45_100);
 
     expect(l1.getLineIndexesByTimePoint(13_000)[0]).toBe(0);
     expect(l1.getLineIndexesByTimePoint(18_000)[0]).toBe(1);
