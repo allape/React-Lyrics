@@ -173,7 +173,7 @@ export default function LyricsCreator({
 
   const handleBackToTop = useCallback(() => {
     titleRef.current?.scrollIntoView({
-      block: "start",
+      block: "center",
     });
   }, []);
 
