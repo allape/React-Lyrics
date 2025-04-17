@@ -163,15 +163,15 @@ export default function Lyrics({
                 classNames?.currentx?.[distanceFromCurrent],
               )}
               data-lyrics={`index-${lineIndex}`}
-              onClick={() => onChange?.(l[0] + offset)}
+              onClick={() => onChange?.(l.st + offset)}
               style={stylesFromProps?.line}
             >
-              {l[2].map((i, syllableIndex) => {
+              {l.syllables.map((i, syllableIndex) => {
                 const spaceClassNames: Array<string | undefined> = [
-                  ...(i[2].startsWith(" ")
+                  ...(i.leadingSpace
                     ? [styles.hasLeadingSpace, classNames?.hasLeadingSpace]
                     : []),
-                  ...(i[2].endsWith(" ")
+                  ...(i.trailingSpace
                     ? [styles.hasTrailingSpace, classNames?.hasTrailingSpace]
                     : []),
                 ];
@@ -192,7 +192,7 @@ export default function Lyrics({
                       )}
                       style={stylesFromProps?.syllable}
                     >
-                      {i[2]}
+                      {i.text}
                     </div>
                     {karaoke && (
                       <div
@@ -208,7 +208,7 @@ export default function Lyrics({
                             : "100%",
                         }}
                       >
-                        {i[2]}
+                        {i.text}
                       </div>
                     )}
                   </div>

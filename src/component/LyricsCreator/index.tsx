@@ -117,7 +117,7 @@ export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 export const DefaultWordSplitterRegexp =
   /([a-zA-Z'?,;.~]+|\S[。，]?[！～~.]*)\s*/gi;
 
-export interface ILyricsEditorProps {
+export interface ILyricsCreatorProps {
   audioSepURL?: string;
   whisperURL?: string;
   onExport?: (
@@ -127,11 +127,11 @@ export interface ILyricsEditorProps {
   ) => void;
 }
 
-export default function LyricsEditor({
+export default function LyricsCreator({
   audioSepURL: audioSepURLFromProps,
   whisperURL: whisperURLFromProps,
   onExport,
-}: ILyricsEditorProps): ReactElement {
+}: ILyricsCreatorProps): ReactElement {
   const { loading, execute } = useLoading();
 
   const [text, textRef, setText] = useProxy<string>("");
@@ -142,7 +142,7 @@ export default function LyricsEditor({
   const [syllableIndex, syllableIndexRef, setSyllableIndex] =
     useProxy<number>(0);
 
-  const [editor, setEditor] = useState<HTMLElement | null>(null);
+  const [container, setContainer] = useState<HTMLElement | null>(null);
 
   const fileNameRef = useRef<string | undefined>(undefined);
   const [audioURL, setAudioURL] = useState<string | undefined>(undefined);
@@ -151,7 +151,7 @@ export default function LyricsEditor({
 
   const timePointsRef = useRef<TimePoints>({});
 
-  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const titleRef = useRef<HTMLHRElement | null>(null);
 
   const [spectrogram, spectrogramRef, setSpectrogram] =
     useProxy<boolean>(false);
@@ -330,7 +330,7 @@ export default function LyricsEditor({
   }, [lineIndexRef, spectrogramRef]);
 
   useEffect(() => {
-    if (!editor) {
+    if (!container) {
       return;
     }
 
@@ -459,14 +459,14 @@ export default function LyricsEditor({
       scrollToCurrentLine();
     };
 
-    editor.addEventListener("keydown", handleKeyDown);
-    editor.addEventListener("keyup", handleKeyUp);
+    container.addEventListener("keydown", handleKeyDown);
+    container.addEventListener("keyup", handleKeyUp);
 
     let scrollerTimer = -1;
 
     const handleWindowKeyup = (e: KeyboardEvent) => {
       if (KeyCodeToFunction(e.code, KeyboardEventToMask(e)) === "Focus") {
-        editor.focus();
+        container.focus();
         clearTimeout(scrollerTimer);
         scrollerTimer = setTimeout(
           () => scrollToCurrentLine(),
@@ -479,8 +479,8 @@ export default function LyricsEditor({
     return () => {
       clearTimeout(scrollerTimer);
 
-      editor.removeEventListener("keydown", handleKeyDown);
-      editor.removeEventListener("keyup", handleKeyUp);
+      container.removeEventListener("keydown", handleKeyDown);
+      container.removeEventListener("keyup", handleKeyUp);
 
       window.removeEventListener("keyup", handleWindowKeyup);
     };
@@ -491,7 +491,7 @@ export default function LyricsEditor({
     setLineIndex,
     setSyllableIndex,
     syllableIndexRef,
-    editor,
+    container,
     handleTogglePlay,
     audioRef,
     spectrogramRef,
@@ -565,9 +565,8 @@ export default function LyricsEditor({
 
   return (
     <div className={styles.wrapper}>
-      <h2 ref={titleRef}>Lyrics Editor</h2>
       <FileInput value={audioURL} onChange={setAudioURL} onFile={handleFile} />
-      <hr />
+      <hr ref={titleRef} />
       <div className={styles.advanced}>
         <div className={styles.controls}>
           <label onClick={() => setAudioSepEnabled((i) => !i)}>
@@ -594,8 +593,8 @@ export default function LyricsEditor({
           value={audioSepURL}
           onChange={(e) => setAudioSepURL(e.target.value)}
         />
+        <hr />
       </div>
-      <hr />
       <div className={styles.advanced}>
         <div className={styles.controls}>
           <label onClick={() => setWhisperEnabled((i) => !i)}>
@@ -620,8 +619,8 @@ export default function LyricsEditor({
           value={whisperURL}
           onChange={(e) => setWhisperURL(e.target.value)}
         />
+        <hr />
       </div>
-      <hr />
       <label>Word Split RegExp:</label>
       <input
         type="text"
@@ -635,7 +634,7 @@ export default function LyricsEditor({
         className={styles.text}
         onDrop={handleDropLRCFile}
         rows={10}
-        placeholder="Add text or drop a LRC file here"
+        placeholder="Add lyrics here or drop a LRC/LRCP file here"
         value={text}
         onChange={(e) => setText(e.target.value)}
         onBlur={handleReload}
@@ -666,15 +665,13 @@ export default function LyricsEditor({
         />
       </div>
       <hr />
-      <p>[Space] to toggle player, [Shift] + [Arrow Keys] to seek player;</p>
-      <p>Hold [Arrow Keys] to start recording syllable.</p>
-      <hr />
       <div
         className={styles.lines}
         tabIndex={0}
-        ref={setEditor}
+        ref={setContainer}
         onClick={(e) => e.currentTarget.focus()}
       >
+        <p className={styles.empty}>{lines.length === 0 ? "No Syllable Found" : undefined}</p>
         {lines.map((line, li) => {
           return (
             <div key={li} className={styles.line} data-line={`index-${li}`}>

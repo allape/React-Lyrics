@@ -4,10 +4,10 @@ export type * from "./src/core/lyrics";
 export { default as Lyrics, type ILyricsProps } from "./src/component/Lyrics";
 
 export {
-  default as LyricsEditor,
+  default as LyricsCreator,
   DefaultWordSplitterRegexp,
-  type ILyricsEditorProps,
-} from "./src/component/LyricsEditor";
+  type ILyricsCreatorProps,
+} from "./src/component/LyricsCreator";
 
 export {
   default as Waveform,

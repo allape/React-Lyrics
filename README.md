@@ -8,7 +8,7 @@ React Component for Making and Display Lyrics of A Song
 
 - [x] Basic Mode
 - [x] Karaoke Mode
-- [x] Lyrics Editor
+- [x] Lyrics Creator
 - [ ] Apple Music Style (Almost)
 
 ### Installation
