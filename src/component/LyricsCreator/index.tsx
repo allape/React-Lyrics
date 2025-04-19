@@ -115,7 +115,7 @@ export interface IWhisperSyllable {
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
 export const DefaultWordSplitterRegexp =
-  /([a-zA-Z'?,;.~]+|\S[。，]?[！～~.]*)\s*/gi;
+  /([a-zA-ZÀ-ÿА-Яа-яЁё'¿?!¡,;.~«»]+|\S[。，]?[！～~.]*)\s*/gi;
 
 export interface ILyricsCreatorProps {
   audioSepURL?: string;
@@ -671,7 +671,9 @@ export default function LyricsCreator({
         ref={setContainer}
         onClick={(e) => e.currentTarget.focus()}
       >
-        <p className={styles.empty}>{lines.length === 0 ? "No Syllable Found" : undefined}</p>
+        <p className={styles.empty}>
+          {lines.length === 0 ? "No Syllable Found" : undefined}
+        </p>
         {lines.map((line, li) => {
           return (
             <div key={li} className={styles.line} data-line={`index-${li}`}>
