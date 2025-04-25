@@ -15,3 +15,5 @@ export {
 } from "./src/component/Waveform";
 
 export { default as useRAFAudioTime } from "./src/hook/useRAFAudioTime";
+export { LyricsText } from './src/example/LInternationale.ts';
+export { OGG } from "./src/example/LInternationale.ts";

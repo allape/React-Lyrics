@@ -3,7 +3,7 @@ import WaveSurfer, { WaveSurferOptions } from "wavesurfer.js";
 import Hover from "wavesurfer.js/dist/plugins/hover.esm.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import Spectrogram from "wavesurfer.js/dist/plugins/spectrogram.esm.js";
-import { RegionParams } from "wavesurfer.js/plugins/regions";
+import { Region, RegionParams } from "wavesurfer.js/plugins/regions";
 
 const RegionsP = RegionsPlugin.create();
 
@@ -14,6 +14,7 @@ export interface IWaveFormProps extends HTMLProps<HTMLDivElement> {
   regions?: RegionParams[];
   waveOptions?: Omit<WaveSurferOptions, "container" | "url">;
   onAudioLoaded?: (waveSurfer: WaveSurfer) => void;
+  onRegionUpdated?: (region: Region) => void;
 }
 
 export default function WaveForm({
@@ -23,6 +24,7 @@ export default function WaveForm({
   regions,
   waveOptions,
   onAudioLoaded,
+  onRegionUpdated,
   ...props
 }: IWaveFormProps): ReactElement {
   const surfer = useRef<WaveSurfer | null>(null);
@@ -79,6 +81,10 @@ export default function WaveForm({
       });
     });
 
+    RegionsP.on("region-updated", (region) => {
+      onRegionUpdated?.(region);
+    });
+
     surfer.current = s;
 
     onAudioLoaded?.(s);
@@ -86,7 +92,16 @@ export default function WaveForm({
     return () => {
       s.destroy();
     };
-  }, [container, hover, onAudioLoaded, regions, spectrogram, url, waveOptions]);
+  }, [
+    container,
+    hover,
+    onAudioLoaded,
+    onRegionUpdated,
+    regions,
+    spectrogram,
+    url,
+    waveOptions,
+  ]);
 
   return (
     <div ref={setContainer} {...props}>
