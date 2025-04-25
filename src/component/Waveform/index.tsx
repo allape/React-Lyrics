@@ -3,17 +3,20 @@ import WaveSurfer, { WaveSurferOptions } from "wavesurfer.js";
 import Hover from "wavesurfer.js/dist/plugins/hover.esm.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import Spectrogram from "wavesurfer.js/dist/plugins/spectrogram.esm.js";
-import { RegionParams } from "wavesurfer.js/plugins/regions";
+import { Region, RegionParams } from "wavesurfer.js/plugins/regions";
 
-const RegionsP = RegionsPlugin.create();
+export interface IRegionParams extends RegionParams {
+  hoverColor?: string;
+}
 
 export interface IWaveFormProps extends HTMLProps<HTMLDivElement> {
   url?: string;
   spectrogram?: boolean;
   hover?: boolean;
-  regions?: RegionParams[];
-  waveOptions?: Omit<WaveSurferOptions, "container" | "url">;
+  regions?: IRegionParams[];
+  options?: Omit<WaveSurferOptions, "container" | "url">;
   onAudioLoaded?: (waveSurfer: WaveSurfer) => void;
+  onRegionUpdated?: (region: Region) => void;
 }
 
 export default function WaveForm({
@@ -21,8 +24,9 @@ export default function WaveForm({
   spectrogram = true,
   hover = true,
   regions,
-  waveOptions,
+  options,
   onAudioLoaded,
+  onRegionUpdated,
   ...props
 }: IWaveFormProps): ReactElement {
   const surfer = useRef<WaveSurfer | null>(null);
@@ -33,6 +37,8 @@ export default function WaveForm({
       return;
     }
 
+    const regionPlugin = RegionsPlugin.create();
+
     const s = new WaveSurfer({
       container,
       url,
@@ -42,8 +48,8 @@ export default function WaveForm({
       autoScroll: true,
       autoCenter: true,
       mediaControls: true,
-      plugins: [RegionsP],
-      ...waveOptions,
+      plugins: [regionPlugin],
+      ...options,
     });
     s.getMediaElement().style.marginTop = "10px";
 
@@ -74,9 +80,23 @@ export default function WaveForm({
     }
 
     s.on("decode", () => {
-      regions?.forEach((region) => {
-        RegionsP.addRegion(region);
+      regions?.forEach((param) => {
+        const r = regionPlugin.addRegion(param);
+        r.on("over", () => {
+          r.setOptions({
+            color: param.hoverColor || param.color,
+          });
+        });
+        r.on("leave", () => {
+          r.setOptions({
+            color: param.color,
+          });
+        });
       });
+    });
+
+    regionPlugin.on("region-updated", (region) => {
+      onRegionUpdated?.(region);
     });
 
     surfer.current = s;
@@ -85,8 +105,18 @@ export default function WaveForm({
 
     return () => {
       s.destroy();
+      regionPlugin.destroy();
     };
-  }, [container, hover, onAudioLoaded, regions, spectrogram, url, waveOptions]);
+  }, [
+    container,
+    hover,
+    onAudioLoaded,
+    onRegionUpdated,
+    regions,
+    spectrogram,
+    url,
+    options,
+  ]);
 
   return (
     <div ref={setContainer} {...props}>

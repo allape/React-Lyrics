@@ -1,11 +1,13 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 import LyricsCreator from "./component/LyricsCreator";
+import LyricsTimeLine from "./component/LyricsTimeLine";
+import { LyricsText, OGG } from "./example/LInternationale.ts";
 import { ILV } from "./helper/lv.ts";
 import styles from "./style.module.scss";
 import Demo from "./view/Demo";
 import SimplePlayer from "./view/SimplePlayer";
 
-type Route = "demo" | "lyrics-creator" | "simple-player";
+type Route = "demo" | "lyrics-creator" | "simple-player" | "lyrics-timeline";
 
 const Routers: ILV<Route>[] = [
   {
@@ -20,9 +22,17 @@ const Routers: ILV<Route>[] = [
     label: "Simple Player",
     value: "simple-player",
   },
+  {
+    label: "Lyrics Timeline",
+    value: "lyrics-timeline",
+  },
 ];
 
 const DefaultRoute = Routers[0].value;
+
+function log(...msg: unknown[]): void {
+  console.log(...msg);
+}
 
 export default function App(): ReactElement {
   const [route, setRoute] = useState<Route | undefined>(undefined);
@@ -90,6 +100,9 @@ export default function App(): ReactElement {
           </>
         )}
         {route === "simple-player" && <SimplePlayer />}
+        {route === "lyrics-timeline" && (
+          <LyricsTimeLine src={OGG} lyrics={LyricsText} onExport={log} />
+        )}
       </div>
     </div>
   );

@@ -24,6 +24,8 @@ export type Line = {
 export type Progress = 0 | 1 | number;
 
 export default class Lyrics {
+  public static readonly DEFAULT_SYLLABLE_MERGEABLE_GAP: Millisecond = 200;
+
   public readonly lines: Line[] = [];
 
   /**
@@ -33,7 +35,7 @@ export default class Lyrics {
    */
   public glueLine(
     diff: Millisecond | -1 = -1,
-    syllableDiff: Millisecond = 100,
+    syllableDiff: Millisecond = Lyrics.DEFAULT_SYLLABLE_MERGEABLE_GAP,
   ): Line[] {
     syllableDiff = Math.max(0, syllableDiff);
 
