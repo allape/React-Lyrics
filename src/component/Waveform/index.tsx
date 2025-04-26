@@ -7,6 +7,7 @@ import { Region, RegionParams } from "wavesurfer.js/plugins/regions";
 
 export interface IRegionParams extends RegionParams {
   hoverColor?: string;
+  activeColor?: string;
 }
 
 export interface IWaveFormProps extends HTMLProps<HTMLDivElement> {
@@ -80,7 +81,29 @@ export default function WaveForm({
     }
 
     s.on("decode", () => {
-      regions?.forEach((param) => {
+      if (!regions) {
+        return;
+      }
+
+      const setActiveColor = (region: Region, active: boolean) => {
+        const param = regions.find((p) => p.id === region.id);
+        if (!param || !param.activeColor) {
+          return;
+        }
+
+        region.setOptions({
+          color: active ? param.activeColor || param.color : param.color,
+        });
+      };
+
+      regionPlugin.on("region-in", (region: Region) => {
+        setActiveColor(region, true);
+      });
+      regionPlugin.on("region-out", (region: Region) => {
+        setActiveColor(region, false);
+      });
+
+      regions.forEach((param) => {
         const r = regionPlugin.addRegion(param);
         r.on("over", () => {
           r.setOptions({
@@ -88,6 +111,10 @@ export default function WaveForm({
           });
         });
         r.on("leave", () => {
+          const now = s.getCurrentTime();
+          if (now >= r.start && now <= r.end && param.activeColor) {
+            return;
+          }
           r.setOptions({
             color: param.color,
           });

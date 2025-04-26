@@ -1,0 +1,36 @@
+.wrapper {
+  background-color: black;
+  padding: 10px;
+
+  .row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .fileContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .textContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .text {
+      resize: vertical;
+      flex: 1;
+    }
+  }
+
+  .button {
+    display: block;
+    margin: 10px auto 0;
+    font-size: 20px;
+    user-select: none;
+    cursor: pointer;
+  }
+}

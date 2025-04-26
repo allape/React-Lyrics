@@ -1,10 +1,12 @@
 import { useProxy } from "@allape/use-loading";
 import {
+  ForwardedRef,
+  forwardRef,
   KeyboardEvent,
   ReactElement,
-  ReactNode,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
 } from "react";
@@ -12,17 +14,18 @@ import WaveSurfer from "wavesurfer.js";
 import { Region } from "wavesurfer.js/plugins/regions";
 import { LyricsDriver, Millisecond, TimePoint } from "../../../index.ts";
 import WaveForm, { IWaveFormProps } from "../Waveform";
-import styles from "./style.module.scss";
 
 export const GAP_FOR_MOUSE: Millisecond = 5;
 
-export interface IRenderOptions {
-  export?: () => void;
+export interface ILyricsTimeLineRef {
+  handleExport: () => Promise<string>;
 }
 
 export interface ILyricsTimeLineProps {
   src?: string;
   lyrics?: string;
+  editable?: boolean;
+  styleOfSyllable?: string;
   /**
    * The threshold for merging syllables.
    */
@@ -32,19 +35,22 @@ export interface ILyricsTimeLineProps {
    */
   lineBreakerWidth?: Millisecond;
   options?: IWaveFormProps["options"];
-  onRenderButton?: (options: IRenderOptions) => ReactNode;
-  onExport?: (lyrics: string) => void;
+  onExport?: (lyrics: string) => Promise<string> | string | void;
 }
 
-export default function LyricsTimeLine({
-  src,
-  lyrics,
-  mergeableThreshold = LyricsDriver.DEFAULT_SYLLABLE_MERGEABLE_GAP,
-  lineBreakerWidth = 20,
-  options: optionsFromProps,
-  onRenderButton,
-  onExport,
-}: ILyricsTimeLineProps): ReactElement {
+function LyricsTimeLine(
+  {
+    src,
+    lyrics,
+    editable = true,
+    styleOfSyllable = "",
+    mergeableThreshold = LyricsDriver.DEFAULT_SYLLABLE_MERGEABLE_GAP,
+    lineBreakerWidth = 20,
+    options: optionsFromProps,
+    onExport,
+  }: ILyricsTimeLineProps,
+  ref: ForwardedRef<ILyricsTimeLineRef>,
+): ReactElement {
   const [regions, regionsRef, setRegions] = useProxy<
     Exclude<IWaveFormProps["regions"], undefined>
   >([]);
@@ -65,37 +71,50 @@ export default function LyricsTimeLine({
     const labels: IWaveFormProps["regions"] = [];
     let index = 0;
 
+    const gapForMouse = editable ? GAP_FOR_MOUSE : 0;
+
     driver.lines.forEach((line, li) => {
       line.syllables.forEach((syllable, si) => {
-        const even = index++ % 2 === 0;
+        const even = editable ? index++ % 2 === 0 : true;
+        const div = document.createElement("div");
+        div.innerText = syllable.text;
+        div.style = styleOfSyllable;
+
+        const activeColor = even
+          ? "rgba(0, 0, 255, 0.5)"
+          : "rgba(0, 255, 0, 0.5)";
+
         labels.push({
           id: `syllable_${li}_${si}`,
-          start: (syllable.st + GAP_FOR_MOUSE) / 1000,
-          end: (syllable.et - GAP_FOR_MOUSE) / 1000,
-          content: syllable.text,
-          drag: true,
-          resize: true,
+          start: (syllable.st + gapForMouse) / 1000,
+          end: (syllable.et - gapForMouse) / 1000,
+          content: div,
+          drag: editable,
+          resize: editable,
           color: even ? "rgba(0, 0, 255, 0.2)" : "rgba(0, 255, 0, 0.2)",
-          hoverColor: even ? "rgba(0, 0, 255, 0.5)" : "rgba(0, 255, 0, 0.5)",
+          hoverColor: activeColor,
+          activeColor,
         });
       });
 
-      const lineBreakerSt: TimePoint = line.et + GAP_FOR_MOUSE * 2;
-      labels.push({
-        id: `newline_${li}`,
-        start: lineBreakerSt / 1000,
-        end: lineBreakerSt / 1000 + lineBreakerWidth / 1000,
-        color: "rgba(255, 0, 0, 0.5)",
-        hoverColor: "rgba(255, 0, 0, 1)",
-        drag: true,
-        resize: false,
-      });
+      if (editable) {
+        const lineBreakerSt: TimePoint = line.et + gapForMouse * 2;
+        labels.push({
+          id: `newline_${li}`,
+          start: lineBreakerSt / 1000,
+          end: lineBreakerSt / 1000 + lineBreakerWidth / 1000,
+          color: "rgba(255, 0, 0, 0.5)",
+          hoverColor: "rgba(255, 0, 0, 1)",
+          drag: true,
+          resize: false,
+        });
+      }
     });
 
     setRegions(labels);
-  }, [lineBreakerWidth, lyrics, setRegions]);
+  }, [editable, lineBreakerWidth, lyrics, setRegions, styleOfSyllable]);
 
-  const handleExportRefinedLyrics = useCallback(() => {
+  const handleExport = useCallback(async () => {
     const lines: string[] = [];
     let line: string = "";
 
@@ -130,14 +149,23 @@ export default function LyricsTimeLine({
           }
         }
 
-        line += `${LyricsDriver.toStringTimePoint(st)}${syllable.content}${LyricsDriver.toStringTimePoint(et)}`;
+        let text = "";
+        if (syllable.content instanceof HTMLElement) {
+          text = syllable.content.innerText;
+        } else if (typeof syllable.content === "string") {
+          text = syllable.content;
+        }
+
+        line += `${LyricsDriver.toStringTimePoint(st)}${text}${LyricsDriver.toStringTimePoint(et)}`;
       });
 
     if (line) {
       lines.push(line);
     }
 
-    onExport?.(lines.join("\n"));
+    const result = lines.join("\n");
+
+    return (await onExport?.(result)) || result;
   }, [mergeableThreshold, onExport, regionsRef]);
 
   const handleRegionUpdate = useCallback(
@@ -196,7 +224,7 @@ export default function LyricsTimeLine({
 
   const options = useMemo<Exclude<IWaveFormProps["options"], undefined>>(
     () => ({
-      height: 300,
+      height: 200,
       hideScrollbar: true,
       minPxPerSec: 250,
       ...optionsFromProps,
@@ -204,12 +232,16 @@ export default function LyricsTimeLine({
     [optionsFromProps],
   );
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      handleExport,
+    }),
+    [handleExport],
+  );
+
   return (
-    <div
-      className={styles.wrapper}
-      tabIndex={0}
-      onKeyDownCapture={handleKeyDown}
-    >
+    <div tabIndex={0} onKeyDownCapture={handleKeyDown}>
       <WaveForm
         url={src}
         regions={regions}
@@ -219,11 +251,10 @@ export default function LyricsTimeLine({
         onAudioLoaded={handleWaveFormInit}
         onRegionUpdated={handleRegionUpdate}
       />
-      {onRenderButton?.({ export: handleExportRefinedLyrics }) || (
-        <button className={styles.button} onClick={handleExportRefinedLyrics}>
-          Export Refined Lyrics
-        </button>
-      )}
     </div>
   );
 }
+
+export default forwardRef<ILyricsTimeLineRef, ILyricsTimeLineProps>(
+  LyricsTimeLine,
+);
