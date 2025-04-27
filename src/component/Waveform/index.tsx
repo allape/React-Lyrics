@@ -112,16 +112,16 @@ export default function WaveForm({
         });
       };
 
-      let hoveringRegionId: Region["id"] | undefined = undefined;
-      let activeRegionId: Region["id"] | undefined = undefined;
+      const activeRegionIds: Record<Region["id"], boolean> = {};
+      const hoveringRegionIds: Record<Region["id"], boolean> = {};
 
       regionPlugin.on("region-in", (region: Region) => {
-        activeRegionId = region.id;
+        activeRegionIds[region.id] = true;
         setRegionColor(region, "active");
       });
       regionPlugin.on("region-out", (region: Region) => {
-        activeRegionId = undefined;
-        if (hoveringRegionId === region.id) {
+        delete activeRegionIds[region.id];
+        if (hoveringRegionIds[region.id]) {
           setRegionColor(region, "hover");
         } else {
           setRegionColor(region, "default");
@@ -131,15 +131,15 @@ export default function WaveForm({
       regions.forEach((param) => {
         const r = regionPlugin.addRegion(param);
         r.on("over", () => {
-          hoveringRegionId = r.id;
-          if (activeRegionId === r.id) {
+          hoveringRegionIds[r.id] = true;
+          if (activeRegionIds[r.id]) {
             return;
           }
           setRegionColor(r, "hover");
         });
         r.on("leave", () => {
-          hoveringRegionId = undefined;
-          if (activeRegionId === r.id) {
+          delete hoveringRegionIds[r.id];
+          if (activeRegionIds[r.id]) {
             return;
           }
           setRegionColor(r, "default");
