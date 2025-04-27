@@ -85,39 +85,64 @@ export default function WaveForm({
         return;
       }
 
-      const setActiveColor = (region: Region, active: boolean) => {
+      const setRegionColor = (
+        region: Region,
+        type: "active" | "hover" | "default",
+      ) => {
         const param = regions.find((p) => p.id === region.id);
         if (!param || !param.activeColor) {
           return;
         }
 
+        let color = param.color;
+
+        switch (type) {
+          case "active":
+            color = param.activeColor || color;
+            break;
+          case "hover":
+            color = param.hoverColor || color;
+            break;
+          default:
+            break;
+        }
+
         region.setOptions({
-          color: active ? param.activeColor || param.color : param.color,
+          color,
         });
       };
 
+      let hoveringRegionId: Region["id"] | undefined = undefined;
+      let activeRegionId: Region["id"] | undefined = undefined;
+
       regionPlugin.on("region-in", (region: Region) => {
-        setActiveColor(region, true);
+        activeRegionId = region.id;
+        setRegionColor(region, "active");
       });
       regionPlugin.on("region-out", (region: Region) => {
-        setActiveColor(region, false);
+        activeRegionId = undefined;
+        if (hoveringRegionId === region.id) {
+          setRegionColor(region, "hover");
+        } else {
+          setRegionColor(region, "default");
+        }
       });
 
       regions.forEach((param) => {
         const r = regionPlugin.addRegion(param);
         r.on("over", () => {
-          r.setOptions({
-            color: param.hoverColor || param.color,
-          });
-        });
-        r.on("leave", () => {
-          const now = s.getCurrentTime();
-          if (now >= r.start && now <= r.end && param.activeColor) {
+          hoveringRegionId = r.id;
+          if (activeRegionId === r.id) {
             return;
           }
-          r.setOptions({
-            color: param.color,
-          });
+          setRegionColor(r, "hover");
+        });
+        r.on("leave", () => {
+          hoveringRegionId = undefined;
+          if (activeRegionId === r.id) {
+            return;
+          }
+          setRegionColor(r, "default");
         });
       });
     });

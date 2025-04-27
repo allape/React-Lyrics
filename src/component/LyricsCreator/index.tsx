@@ -118,6 +118,8 @@ export const DefaultWordSplitterRegexp =
   /([-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.~«»/]+|["“‘《]?\S[。，"”’》？！、～~.:：]*)\s*/gi;
 
 export interface ILyricsCreatorProps {
+  text?: string;
+  src?: string;
   audioSepURL?: string;
   whisperURL?: string;
   onExport?: (
@@ -130,6 +132,8 @@ export interface ILyricsCreatorProps {
 export default function LyricsCreator({
   audioSepURL: audioSepURLFromProps,
   whisperURL: whisperURLFromProps,
+  text: textFromProps,
+  src: srcFromProps,
   onExport,
 }: ILyricsCreatorProps): ReactElement {
   const { loading, execute } = useLoading();
@@ -216,6 +220,15 @@ export default function LyricsCreator({
     textRef,
     wordSplitterRegexpRef,
   ]);
+
+  useEffect(() => {
+    setText(textFromProps || "");
+    handleReload();
+  }, [handleReload, setText, textFromProps]);
+
+  useEffect(() => {
+    setAudioURL(srcFromProps);
+  }, [srcFromProps]);
 
   const handleDropLRCFile = useCallback(
     async (e: DragEvent<HTMLTextAreaElement>) => {

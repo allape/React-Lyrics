@@ -1,11 +1,12 @@
 import { useProxy } from "@allape/use-loading";
-import { ReactElement, useCallback, useRef, useState } from "react";
+import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import DroppableTextarea from "../../component/DroppableTextarea";
 import FileInput from "../../component/FileInput";
 import LyricsTimeLine, {
   ILyricsTimeLineRef,
 } from "../../component/LyricsTimeLine";
 import { LyricsText, OGG } from "../../example/LInternationale.ts";
+import useSrcTextFromSearchParams from "../../hook/useSrcTextFromSearchParams.ts";
 import styles from "./style.module.scss";
 
 function log(...msg: unknown[]): void {
@@ -20,6 +21,21 @@ export default function LyricsTimeLineDemo(): ReactElement {
 
   const [renderingText, setRenderingText] = useState<string>(LyricsText);
   const [editable, setEditable] = useState<boolean>(false);
+
+  const { src: srcFromSP, text: textFromSP } = useSrcTextFromSearchParams();
+
+  useEffect(() => {
+    if (srcFromSP) {
+      setSrc(srcFromSP);
+    }
+  }, [srcFromSP]);
+
+  useEffect(() => {
+    if (textFromSP) {
+      setText(textFromSP);
+      setRenderingText(textFromSP);
+    }
+  }, [setText, textFromSP]);
 
   const handleExport = useCallback(async () => {
     const lyrics = await ltlRef.current?.handleExport();
@@ -55,7 +71,7 @@ export default function LyricsTimeLineDemo(): ReactElement {
           onBlur={handleTextBlur}
         ></DroppableTextarea>
       </div>
-      <hr/>
+      <hr />
       <p className={styles.row}>
         <label htmlFor="LyricsTimeLineDemo_Editable">Editable:</label>
         <input

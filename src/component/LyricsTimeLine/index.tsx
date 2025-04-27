@@ -92,7 +92,7 @@ function LyricsTimeLine(
           drag: editable,
           resize: editable,
           color: even ? "rgba(0, 0, 255, 0.2)" : "rgba(0, 255, 0, 0.2)",
-          hoverColor: activeColor,
+          hoverColor: editable ? activeColor : undefined,
           activeColor,
         });
       });
