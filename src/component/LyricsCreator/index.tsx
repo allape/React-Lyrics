@@ -115,7 +115,7 @@ export interface IWhisperSyllable {
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
 export const DefaultWordSplitterRegexp =
-  /([-a-zA-ZÀ-ÿА-Яа-яЁё'¿?!¡,:;.~«»/]+|[“‘]?\S[。，”’？！、～~.:：]*)\s*/gi;
+  /([-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.~«»/]+|["“‘《]?\S[。，"”’》？！、～~.:：]*)\s*/gi;
 
 export interface ILyricsCreatorProps {
   audioSepURL?: string;
