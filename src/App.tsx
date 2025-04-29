@@ -14,12 +14,12 @@ const Routers: ILV<Route>[] = [
     value: "demo",
   },
   {
-    label: "Lyrics Creator",
-    value: "lyrics-creator",
-  },
-  {
     label: "Simple Player",
     value: "simple-player",
+  },
+  {
+    label: "Lyrics Creator",
+    value: "lyrics-creator",
   },
   {
     label: "Lyrics Timeline",
@@ -63,8 +63,8 @@ export default function App(): ReactElement {
       </div>
       <div className={styles.slot}>
         {route === "demo" && <Demo />}
-        {route === "lyrics-creator" && <LyricsCreatorDemo />}
         {route === "simple-player" && <SimplePlayer />}
+        {route === "lyrics-creator" && <LyricsCreatorDemo />}
         {route === "lyrics-timeline" && <LyricsTimeLineDemo />}
       </div>
     </div>

@@ -189,6 +189,9 @@ function LyricsTimeLine(
       return;
     }
 
+    e.preventDefault();
+    e.stopPropagation();
+
     let seek: TimePoint = 0;
 
     switch (e.code) {

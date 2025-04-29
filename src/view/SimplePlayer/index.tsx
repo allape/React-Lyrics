@@ -1,11 +1,18 @@
 import { useProxy } from "@allape/use-loading";
-import { KeyboardEvent, ReactElement, useCallback, useState } from "react";
+import {
+  KeyboardEvent,
+  ReactElement,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { LyricsDriver } from "../../../index.ts";
 import DroppableTextarea from "../../component/DroppableTextarea";
 import FileInput from "../../component/FileInput";
 import Lyrics from "../../component/Lyrics";
 import { TimePoint } from "../../core/lyrics.ts";
 import useRAFAudioTime from "../../hook/useRAFAudioTime.ts";
+import useSrcTextFromSearchParams from "../../hook/useSrcTextFromSearchParams.ts";
 import styles from "./style.module.scss";
 
 export interface ISimplePlayerProps {
@@ -23,6 +30,20 @@ export default function SimplePlayer({
 
   const [url, setUrl] = useState<string | undefined>(urlFromProps);
   const [text, setText] = useState<string | undefined>(content);
+
+  const { src: srcFromSP, text: textFromSP } = useSrcTextFromSearchParams();
+
+  useEffect(() => {
+    if (srcFromSP) {
+      setUrl(srcFromSP);
+    }
+  }, [srcFromSP]);
+
+  useEffect(() => {
+    if (textFromSP) {
+      setText(textFromSP);
+    }
+  }, [setText, textFromSP]);
 
   const [current] = useRAFAudioTime(audio);
 

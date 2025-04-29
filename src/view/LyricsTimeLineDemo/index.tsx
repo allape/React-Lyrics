@@ -32,6 +32,7 @@ export default function LyricsTimeLineDemo(): ReactElement {
 
   useEffect(() => {
     if (textFromSP) {
+      setEditable(true);
       setText(textFromSP);
       setRenderingText(textFromSP);
     }
@@ -55,6 +56,15 @@ export default function LyricsTimeLineDemo(): ReactElement {
   const handleTextBlur = useCallback(() => {
     setRenderingText(textRef.current || "");
   }, [textRef]);
+
+  const handleApply = useCallback(async () => {
+    const lyrics = await ltlRef.current?.handleExport();
+    if (!lyrics) {
+      return;
+    }
+
+    setText(lyrics);
+  }, [setText]);
 
   return (
     <div className={styles.wrapper}>
@@ -90,9 +100,14 @@ export default function LyricsTimeLineDemo(): ReactElement {
         onExport={log}
       />
       {editable && (
-        <button className={styles.button} onClick={handleExport}>
-          Export Refined Lyrics
-        </button>
+        <div className={styles.buttons}>
+          <button className={styles.button} onClick={handleApply}>
+            Put Into Text Field
+          </button>
+          <button className={styles.button} onClick={handleExport}>
+            Export Refined Lyrics
+          </button>
+        </div>
       )}
     </div>
   );
