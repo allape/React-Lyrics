@@ -112,7 +112,9 @@ export default function Lyrics({
       performance.now() - lastInteractTime.current > InteractedThreshold &&
       performance.now() - lastScrollIntoTime.current > ScrollIntoThreshold
     ) {
-      const line = container.querySelector(`[data-lyrics=index-${indexes[0]}]`);
+      const line = container.querySelector(
+        `[data-lyrics=index-${indexes[indexes.length - 1]}]`,
+      );
       if (line) {
         line.scrollIntoView({
           block: "center",
