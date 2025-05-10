@@ -10,7 +10,12 @@ import {
 } from "react";
 import WaveSurfer from "wavesurfer.js";
 import { RegionParams } from "wavesurfer.js/plugins/regions";
-import Lyrics, { Millisecond, TimePoint } from "../../core/lyrics.ts";
+import Lyrics, {
+  EndTimePoint,
+  Millisecond,
+  StartTimePoint,
+  TimePoint,
+} from "../../core/lyrics.ts";
 import FileInput from "../FileInput";
 import WaveForm from "../Waveform";
 import styles from "./style.module.scss";
@@ -196,6 +201,19 @@ export default function LyricsCreator({
     if (/\[\d+:\d+(?:\.\d+)?]/gi.test(t)) {
       const lrc = Lyrics.parseStandardLRC(t);
       t = lrc.toString();
+      timePointsRef.current = lrc.lines.reduce(
+        (prev, curr, index) => ({
+          ...prev,
+          [index]: curr.syllables.reduce(
+            (p, c, i) => ({
+              ...p,
+              [i]: [c.st, c.et],
+            }),
+            {},
+          ),
+        }),
+        {},
+      );
     }
 
     let splitter = DefaultWordSplitterRegexp;
@@ -266,6 +284,47 @@ export default function LyricsCreator({
     if (!linesRef.current.length) {
       alert("No lyrics to export");
       return;
+    }
+
+    const isKaraoke = !!Object.values(timePointsRef.current).find(
+      (line) => Object.keys(line).length > 1,
+    );
+
+    if (isKaraoke) {
+      linesRef.current.forEach((line, index) => {
+        const syllableLength = line.length;
+
+        const timePoints = timePointsRef.current[index];
+        if (!timePoints) {
+          return;
+        }
+
+        const availableTimePointLength = Object.keys(timePoints).length;
+
+        if (
+          syllableLength === 0 ||
+          syllableLength <= availableTimePointLength
+        ) {
+          return;
+        }
+
+        const lastTimePoint: [StartTimePoint, EndTimePoint] =
+          Object.values(timePoints).slice(-1)[0];
+        const interval: Millisecond =
+          (lastTimePoint[1] - lastTimePoint[0]) /
+          (syllableLength - availableTimePointLength);
+
+        for (
+          let i = availableTimePointLength - 1, j = 0;
+          i < syllableLength;
+          i++, j++
+        ) {
+          timePointsRef.current[index][i] = [
+            lastTimePoint[0] + j * interval,
+            lastTimePoint[0] + (j + 1) * interval,
+          ];
+        }
+      });
     }
 
     const lyrics = linesRef.current
