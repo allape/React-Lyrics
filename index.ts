@@ -5,7 +5,7 @@ export { default as Lyrics, type ILyricsProps } from "./src/component/Lyrics";
 
 export {
   default as LyricsCreator,
-  DefaultWordSplitterRegexp,
+  WordSplitterRegexps,
   type ILyricsCreatorProps,
 } from "./src/component/LyricsCreator";
 

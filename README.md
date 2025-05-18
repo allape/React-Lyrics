@@ -11,6 +11,11 @@ React Component for Making and Display Lyrics of A Song
 - [x] Lyrics Creator
 - [ ] Apple Music Style (Almost)
 
+### Practical Project
+
+- Homesong: https://github.com/allape/homesong
+    - Song Management for Home NAS
+
 ### Installation
 
 ```shell
@@ -39,10 +44,10 @@ export function Display({ text, karaoke }: Props): ReactElement {
   return <>
     <auido ref={setAudio} src={url} controls/>
     <Lyrics
-            current={current}
-            content={text}
-            karaoke={karaoke}
-            onChange={handleChange}
+      current={current}
+      content={text}
+      karaoke={karaoke}
+      onChange={handleChange}
     />
   </>;
 }

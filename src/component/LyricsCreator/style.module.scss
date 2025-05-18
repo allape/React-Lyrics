@@ -55,6 +55,21 @@
     }
   }
 
+  .wordSplitter {
+    display: flex;
+    justify-content: stretch;
+    align-items: stretch;
+
+    & > * {
+      flex: 1;
+    }
+
+    .wordSplitterSelector {
+      flex: 1 1;
+      max-width: 200px;
+    }
+  }
+
   .audio {
     width: calc(100% - 20px);
     position: sticky;

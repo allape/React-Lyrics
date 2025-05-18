@@ -119,8 +119,13 @@ export interface IWhisperSyllable {
 
 export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 
-export const DefaultWordSplitterRegexp =
-  /([-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.~«»/]+|["“‘《]?\S[。，"”’》？！、～~.:：]*)\s*/gi;
+// eslint-disable-next-line react-refresh/only-export-components
+export const WordSplitterRegexps = {
+  Default:
+    /([«¿¡(]?[-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.~«»/)]+|["“‘《(（]?\S[。，"”’)）》？！、～~.:：]*)\s*/gi,
+  "Japanese Refined":
+    /([«¿¡(]?[-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.»/)]+|["“‘《(（~]?\S[ぁぃぅぇぉっゃゅょゎゕゖァィゥェォッャュョヮヵヶーんン]*[。，"”’)）》？！、～~.:：]*)\s*/gi,
+};
 
 export interface ILyricsCreatorProps {
   text?: string;
@@ -145,11 +150,15 @@ export default function LyricsCreator({
 
   const [text, textRef, setText] = useProxy<string>("");
   const [wordSplitterRegexp, wordSplitterRegexpRef, setWordSplitterRegexp] =
-    useProxy<string>(DefaultWordSplitterRegexp.source);
+    useProxy<string>(WordSplitterRegexps.Default.source);
   const [lines, linesRef, setLines] = useProxy<string[][]>([]);
   const [lineIndex, lineIndexRef, setLineIndex] = useProxy<number>(0);
   const [syllableIndex, syllableIndexRef, setSyllableIndex] =
     useProxy<number>(0);
+
+  const [selectedWordSplitter, setSelectedWordSplitter] = useState<string>(
+    WordSplitterRegexps.Default.source,
+  );
 
   const [container, setContainer] = useState<HTMLElement | null>(null);
 
@@ -216,7 +225,7 @@ export default function LyricsCreator({
       );
     }
 
-    let splitter = DefaultWordSplitterRegexp;
+    let splitter: RegExp | null = null;
 
     try {
       splitter = new RegExp(wordSplitterRegexpRef.current, "gi");
@@ -694,13 +703,30 @@ export default function LyricsCreator({
         <hr />
       </div>
       <label>Word Split RegExp:</label>
-      <input
-        type="text"
-        placeholder="Word split RegExp"
-        value={wordSplitterRegexp}
-        onChange={(e) => setWordSplitterRegexp(e.target.value)}
-        onBlur={handleReload}
-      />
+      <div className={styles.wordSplitter}>
+        <select
+          className={styles.wordSplitterSelector}
+          value={selectedWordSplitter}
+          onChange={(e) => {
+            setSelectedWordSplitter(e.target.value);
+            setWordSplitterRegexp(e.target.value);
+            handleReload();
+          }}
+        >
+          {Object.entries(WordSplitterRegexps).map(([key, value]) => (
+            <option key={key} value={value.source}>
+              {key}
+            </option>
+          ))}
+        </select>
+        <input
+          type="text"
+          placeholder="Word split RegExp"
+          value={wordSplitterRegexp}
+          onChange={(e) => setWordSplitterRegexp(e.target.value)}
+          onBlur={handleReload}
+        />
+      </div>
       <hr />
       <textarea
         className={styles.text}
