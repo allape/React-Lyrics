@@ -5,8 +5,14 @@ import Demo from "./view/Demo";
 import LyricsCreatorDemo from "./view/LyricsCreatorDemo";
 import LyricsTimeLineDemo from "./view/LyricsTimeLineDemo";
 import SimplePlayer from "./view/SimplePlayer";
+import WaveDiffDemo from "./view/WaveDiffDemo";
 
-type Route = "demo" | "lyrics-creator" | "simple-player" | "lyrics-timeline";
+type Route =
+  | "demo"
+  | "lyrics-creator"
+  | "simple-player"
+  | "lyrics-timeline"
+  | "wave-diff";
 
 const Routers: ILV<Route>[] = [
   {
@@ -24,6 +30,10 @@ const Routers: ILV<Route>[] = [
   {
     label: "Lyrics Timeline",
     value: "lyrics-timeline",
+  },
+  {
+    label: "Audio Wave Diff",
+    value: "wave-diff",
   },
 ];
 
@@ -66,6 +76,7 @@ export default function App(): ReactElement {
         {route === "simple-player" && <SimplePlayer />}
         {route === "lyrics-creator" && <LyricsCreatorDemo />}
         {route === "lyrics-timeline" && <LyricsTimeLineDemo />}
+        {route === "wave-diff" && <WaveDiffDemo />}
       </div>
     </div>
   );
