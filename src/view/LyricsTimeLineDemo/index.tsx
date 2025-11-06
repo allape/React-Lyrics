@@ -102,7 +102,7 @@ export default function LyricsTimeLineDemo(): ReactElement {
       {editable && (
         <div className={styles.buttons}>
           <button className={styles.button} onClick={handleApply}>
-            Put Into Text Field
+            Convert Edited Content Back Into Text Field
           </button>
           <button className={styles.button} onClick={handleExport}>
             Export Refined Lyrics

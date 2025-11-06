@@ -207,22 +207,23 @@ export default function LyricsCreator({
     }
 
     let t = textRef.current;
+
     if (/\[\d+:\d+(?:\.\d+)?]/gi.test(t)) {
       const lrc = Lyrics.parseStandardLRC(t);
       t = lrc.toString();
-      timePointsRef.current = lrc.lines.reduce(
-        (prev, curr, index) => ({
-          ...prev,
-          [index]: curr.syllables.reduce(
-            (p, c, i) => ({
-              ...p,
-              [i]: [c.st, c.et],
-            }),
-            {},
-          ),
-        }),
-        {},
-      );
+      // timePointsRef.current = lrc.lines.reduce(
+      //   (prev, curr, index) => ({
+      //     ...prev,
+      //     [index]: curr.syllables.reduce(
+      //       (p, c, i) => ({
+      //         ...p,
+      //         [i]: [c.st, c.et],
+      //       }),
+      //       {},
+      //     ),
+      //   }),
+      //   {},
+      // );
     }
 
     let splitter: RegExp | null = null;

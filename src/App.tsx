@@ -70,6 +70,13 @@ export default function App(): ReactElement {
             {router.label}
           </a>
         ))}
+        <a
+          className={styles.route}
+          target="_blank"
+          href="https://github.com/allape/React-Lyrics"
+        >
+          GitHub ↗
+        </a>
       </div>
       <div className={styles.slot}>
         {route === "demo" && <Demo />}

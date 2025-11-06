@@ -1,10 +1,21 @@
-import { ReactElement } from "react";
+import { ReactElement, useCallback, useState } from "react";
 import LyricsCreator from "../../component/LyricsCreator";
+import { LyricsText, OGG } from "../../example/LInternationale.ts";
 import useSrcTextFromSearchParams from "../../hook/useSrcTextFromSearchParams.ts";
 import styles from "./style.module.scss";
 
 export default function LyricsCreatorDemo(): ReactElement {
-  const { src, text } = useSrcTextFromSearchParams();
+  const { src: srcFromProps, text: textFromProps } =
+    useSrcTextFromSearchParams();
+
+  const [src, setSrc] = useState<string | undefined>(undefined);
+  const [text, setText] = useState<string | undefined>(undefined);
+
+  const handleClick = useCallback(() => {
+    setSrc(OGG);
+    setText(LyricsText);
+  }, []);
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.lyricsCreator}>
@@ -23,7 +34,7 @@ export default function LyricsCreatorDemo(): ReactElement {
           <code>[↑] / [w]</code> to go back one line;
         </p>
         <p>
-          <code>[Space]</code> to toggle audio;
+          <code>[Space]</code> to play or pause;
         </p>
         <p>
           <code>[Esc]</code> to focus lyrics recorder;
@@ -31,8 +42,12 @@ export default function LyricsCreatorDemo(): ReactElement {
         <p>
           <code>[Shift]+[Any Arrow Key]</code> to seek audio forwards/backwards.
         </p>
+        <p>
+          <button onClick={handleClick}>Try with demo song and lyrics</button>
+        </p>
       </div>
-      <LyricsCreator src={src} text={text} />
+      <hr />
+      <LyricsCreator src={src || srcFromProps} text={text || textFromProps} />
     </div>
   );
 }
