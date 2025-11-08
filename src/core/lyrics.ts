@@ -170,7 +170,14 @@ export default class Lyrics {
   public getLineIndexesByTimePoint(tp: TimePoint): number[] {
     const indexes: number[] = [];
     this.lines.forEach((line, index) => {
-      if (line.st <= tp && (line.et === 0 || tp < line.et)) {
+      if (line.st === line.et) {
+        return;
+      }
+      if (
+        line.st <= tp &&
+        (line.et === 0 || // this is a special adaptation for the last line in .lrc format, which lasts to the end of song
+          tp < line.et)
+      ) {
         indexes.push(index);
       }
     });
