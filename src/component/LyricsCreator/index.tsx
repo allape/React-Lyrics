@@ -20,10 +20,12 @@ import FileInput from "../FileInput";
 import WaveForm from "../Waveform";
 import styles from "./style.module.scss";
 
-const ForwardMore = 10_000;
+const ForwardMore: Millisecond = 10_000;
 const BackwardMore = -ForwardMore;
-const Forward = 3_000;
+const Forward: Millisecond = 3_000;
 const Backward = -Forward;
+
+const ZeroTimeReplaceTo: Millisecond = 10;
 
 function KeyboardEventToMask(e: KeyboardEvent): KeyMask {
   return {
@@ -510,8 +512,8 @@ export default function LyricsCreator({
       timePointsRef.current[lineIndexRef.current] = {
         ...timePointsRef.current[lineIndexRef.current],
         [syllableIndexRef.current]: [
-          keyDownTime,
-          audioRef.current.currentTime * 1000,
+          Math.max(ZeroTimeReplaceTo, keyDownTime),
+          Math.max(ZeroTimeReplaceTo, audioRef.current.currentTime * 1000),
         ],
       };
 
