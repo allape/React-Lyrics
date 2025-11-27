@@ -43,6 +43,13 @@ export default function LyricsCreatorDemo(): ReactElement {
           <code>[Shift]+[Any Arrow Key]</code> to seek audio forwards/backwards.
         </p>
         <p>
+          <code>[Shift]+[1] or [1]</code> to set playback rate to 1.
+        </p>
+        <p>
+          <code>[2]</code> to set playback rate to 2.
+          <code>[Shift]+[2]</code> to set playback rate to 0.5.
+        </p>
+        <p>
           <button onClick={handleClick}>Try with demo song and lyrics</button>
         </p>
       </div>

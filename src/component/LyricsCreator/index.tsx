@@ -46,7 +46,10 @@ type KeyFunction =
   | "Backward"
   | "BackwardMore"
   | "Focus"
-  | "RevokeSyllable";
+  | "RevokeSyllable"
+  | "PlaybackRate1"
+  | "PlaybackRate2"
+  | "PlaybackRateHalf";
 
 type KeyMask = { ctrl?: boolean; shift?: boolean; meta?: boolean };
 
@@ -55,6 +58,13 @@ function KeyCodeToFunction(
   mask: KeyMask,
 ): KeyFunction | null {
   switch (code) {
+    case "Digit1":
+      return "PlaybackRate1";
+    case "Digit2":
+      if (mask.shift) {
+        return "PlaybackRateHalf";
+      }
+      return "PlaybackRate2";
     case "Space":
     case "Numpad0":
     case "Numpad5":
@@ -286,7 +296,9 @@ export default function LyricsCreator({
       if (!audioRef.current) {
         return;
       }
-      const nextTime = audioRef.current.currentTime + duration / 1000;
+      const nextTime =
+        audioRef.current.currentTime +
+        (duration * audioRef.current.playbackRate) / 1000;
       audioRef.current.currentTime = nextTime < 0 ? 0 : nextTime;
     },
     [audioRef],
@@ -493,6 +505,15 @@ export default function LyricsCreator({
             keyDownTime = audioRef.current.currentTime * 1000;
           }
           touched = true;
+          break;
+        case "PlaybackRate1":
+          audioRef.current.playbackRate = 1;
+          break;
+        case "PlaybackRate2":
+          audioRef.current.playbackRate = 2;
+          break;
+        case "PlaybackRateHalf":
+          audioRef.current.playbackRate = 0.5;
           break;
       }
 
