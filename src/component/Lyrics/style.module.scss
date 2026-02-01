@@ -18,6 +18,7 @@
       justify-content: center;
       align-items: center;
       flex-wrap: wrap;
+      font-weight: bold;
 
       &:hover {
         .syllable {
@@ -74,7 +75,7 @@
         }
 
         &.karaoke {
-          opacity: 0.8;
+          opacity: 0.6;
 
           @mixin TextAlignment {
             white-space: nowrap;
@@ -97,7 +98,7 @@
 
           .truth {
             @include TextAlignment;
-            opacity: 0.6;
+            opacity: 0.4;
           }
 
           .mask {
