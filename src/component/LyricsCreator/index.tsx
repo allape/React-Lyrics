@@ -144,6 +144,7 @@ export interface ILyricsCreatorProps {
   src?: string;
   audioSepURL?: string;
   whisperURL?: string;
+  useDoubleSpaceSeparate?: boolean;
   onExport?: (
     lyrics: string,
     lines: string[][],
@@ -156,6 +157,7 @@ export default function LyricsCreator({
   whisperURL: whisperURLFromProps,
   text: textFromProps,
   src: srcFromProps,
+  useDoubleSpaceSeparate: useDoubleSpaceSeparateFromProps,
   onExport,
 }: ILyricsCreatorProps): ReactElement {
   const { loading, execute } = useLoading();
@@ -171,6 +173,11 @@ export default function LyricsCreator({
   const [selectedWordSplitter, setSelectedWordSplitter] = useState<string>(
     WordSplitterRegexps.Default.source,
   );
+  const [
+    useDoubleSpaceSeparate,
+    useDoubleSpaceSeparateRef,
+    setUseDoubleSpaceSeparate,
+  ] = useProxy<boolean>(false);
 
   const [container, setContainer] = useState<HTMLElement | null>(null);
 
@@ -247,19 +254,38 @@ export default function LyricsCreator({
       return;
     }
 
-    setLines(
-      t
-        .split("\n")
-        .filter((i) => !!i.trim())
-        .map((i) => i.trim().match(splitter) || [i], []),
-    );
+    let newLines = t
+      .split("\n")
+      .filter((i) => !!i.trim())
+      .map((i) => i.trim().match(splitter) || [i], []);
+
+    if (useDoubleSpaceSeparateRef.current) {
+      newLines = newLines.map((syllables) => {
+        return syllables.map((s) => {
+          const leadingSpace = s.startsWith("  ") ? " " : "";
+          const endingSpace = s.endsWith("  ") ? " " : "";
+          return `${leadingSpace}${s.trim()}${endingSpace}`;
+        });
+      });
+    }
+
+    setLines(newLines);
   }, [
     setLineIndex,
     setLines,
     setSyllableIndex,
     textRef,
+    useDoubleSpaceSeparateRef,
     wordSplitterRegexpRef,
   ]);
+
+  useEffect(() => {
+    handleReload();
+  }, [handleReload, useDoubleSpaceSeparate]);
+
+  useEffect(() => {
+    setUseDoubleSpaceSeparate(!!useDoubleSpaceSeparateFromProps);
+  }, [setUseDoubleSpaceSeparate, useDoubleSpaceSeparateFromProps]);
 
   useEffect(() => {
     setText(textFromProps || "");
@@ -750,6 +776,14 @@ export default function LyricsCreator({
           onChange={(e) => setWordSplitterRegexp(e.target.value)}
           onBlur={handleReload}
         />
+        <input
+          type="checkbox"
+          title="Use double-space to seperate word, one-space to split syllable"
+          checked={useDoubleSpaceSeparate}
+          onChange={(e) => {
+            setUseDoubleSpaceSeparate(e.target.checked);
+          }}
+        />
       </div>
       <hr />
       <textarea
@@ -798,9 +832,18 @@ export default function LyricsCreator({
         </p>
         {lines.map((line, li) => {
           return (
-            <div key={li} className={styles.line} data-line={`index-${li}`}>
+            <div
+              key={li}
+              className={cls(
+                styles.line,
+                useDoubleSpaceSeparate && styles.hasDoubleSpaceSeparate,
+              )}
+              data-line={`index-${li}`}
+            >
               {line.map((syllable, si) => {
                 const isCurrentLine = lineIndex === li;
+                const hasLeadingSpace = syllable.startsWith(" ");
+                const hasEndingSpace = syllable.endsWith(" ");
                 return (
                   <span
                     key={`line${li}_syllable${si}`}
@@ -814,6 +857,8 @@ export default function LyricsCreator({
                         ? styles.filled
                         : undefined,
                       isCurrentLine && syllableIndex === si && styles.current,
+                      hasLeadingSpace && styles.hasLeadingSpace,
+                      hasEndingSpace && styles.hasEndingSpace,
                     )}
                   >
                     {syllable.trim()}

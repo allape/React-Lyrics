@@ -57,16 +57,21 @@
 
   .wordSplitter {
     display: flex;
-    justify-content: stretch;
+    justify-content: center;
     align-items: stretch;
 
-    & > * {
+    input {
       flex: 1;
+      width: 100%;
+
+      &[type=checkbox] {
+        flex: none;
+        width: unset;
+      }
     }
 
     .wordSplitterSelector {
-      flex: 1 1;
-      max-width: 200px;
+      width: 200px;
     }
   }
 
@@ -115,6 +120,10 @@
       gap: 10px;
       flex-wrap: wrap;
 
+      &.hasDoubleSpaceSeparate {
+        gap: 0;
+      }
+
       .syllable {
         padding: 4px 6px;
         border: 1px solid lightgray;
@@ -138,6 +147,14 @@
             color: black;
             background-color: white;
           }
+        }
+
+        &.hasLeadingSpace {
+          margin-left: 10px;
+        }
+
+        &.hasEndingSpace {
+          margin-right: 10px;
         }
       }
     }

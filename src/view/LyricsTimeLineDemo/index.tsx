@@ -5,7 +5,7 @@ import FileInput from "../../component/FileInput";
 import LyricsTimeLine, {
   ILyricsTimeLineRef,
 } from "../../component/LyricsTimeLine";
-import { LyricsText, OGG } from "../../example/LInternationale.ts";
+import { LyricsText, SRC } from "../../example/LInternationale.ts";
 import useSrcTextFromSearchParams from "../../hook/useSrcTextFromSearchParams.ts";
 import styles from "./style.module.scss";
 
@@ -16,7 +16,7 @@ function log(...msg: unknown[]): void {
 export default function LyricsTimeLineDemo(): ReactElement {
   const ltlRef = useRef<ILyricsTimeLineRef | null>(null);
 
-  const [src, setSrc] = useState<string>(OGG);
+  const [src, setSrc] = useState<string>(SRC);
   const [text, textRef, setText] = useProxy<string | undefined>(LyricsText);
 
   const [renderingText, setRenderingText] = useState<string>(LyricsText);

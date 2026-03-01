@@ -49,4 +49,4 @@ export const LyricsText = `
 [04:45.53]就[04:46.04][04:46.04]一[04:47.09][04:47.09]定[04:47.53][04:47.53]要[04:48.69][04:48.69]实[04:49.20][04:49.20]现[04:51.74]
 `.trim();
 
-export const OGG = new URL("/英特纳雄耐尔.ogg", import.meta.url).href;
+export const SRC = new URL("/英特纳雄耐尔.ogg", import.meta.url).href;

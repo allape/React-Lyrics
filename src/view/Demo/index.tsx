@@ -1,5 +1,5 @@
 import { ReactElement, useMemo, useState } from "react";
-import { LyricsText, OGG } from "../../example/LInternationale.ts";
+import { LyricsText, SRC } from "../../example/LInternationale.ts";
 import { ILV } from "../../helper/lv.ts";
 import SimplePlayer from "../SimplePlayer";
 import styles from "./style.module.scss";
@@ -31,7 +31,7 @@ export default function Demo(): ReactElement {
 
   return (
     <div className={styles.wrapper}>
-      <SimplePlayer url={OGG} karaoke={karaoke} content={content} />
+      <SimplePlayer url={SRC} karaoke={karaoke} content={content} />
       <select
         className={styles.selector}
         value={content}

@@ -1,6 +1,10 @@
 import { ReactElement, useCallback, useState } from "react";
 import LyricsCreator from "../../component/LyricsCreator";
-import { LyricsText, OGG } from "../../example/LInternationale.ts";
+import { LyricsText, SRC } from "../../example/LInternationale.ts";
+import {
+  LyricsText as NGGYULRC,
+  SRC as NGGYUSRC,
+} from "../../example/NeverGonnaGiveYouUp.ts";
 import useSrcTextFromSearchParams from "../../hook/useSrcTextFromSearchParams.ts";
 import styles from "./style.module.scss";
 
@@ -11,9 +15,18 @@ export default function LyricsCreatorDemo(): ReactElement {
   const [src, setSrc] = useState<string | undefined>(undefined);
   const [text, setText] = useState<string | undefined>(undefined);
 
+  const [useDoubleSpaceSeparate, setUseDoubleSpaceSeparate] = useState<boolean>(false);
+
   const handleClick = useCallback(() => {
-    setSrc(OGG);
+    setSrc(SRC);
     setText(LyricsText);
+    setUseDoubleSpaceSeparate(false);
+  }, []);
+
+  const handleNGGYU = useCallback(() => {
+    setSrc(NGGYUSRC);
+    setText(NGGYULRC);
+    setUseDoubleSpaceSeparate(true);
   }, []);
 
   return (
@@ -50,11 +63,18 @@ export default function LyricsCreatorDemo(): ReactElement {
           <code>[Shift]+[2]</code> to set playback rate to 0.5.
         </p>
         <p>
-          <button onClick={handleClick}>Try with demo song and lyrics</button>
+          <button onClick={handleClick}>Try with demo song and lyrics</button>{" "}
+          <button onClick={handleNGGYU}>
+            Never Ganna Give You Up
+          </button>
         </p>
       </div>
       <hr />
-      <LyricsCreator src={src || srcFromProps} text={text || textFromProps} />
+      <LyricsCreator
+        src={src || srcFromProps}
+        text={text || textFromProps}
+        useDoubleSpaceSeparate={useDoubleSpaceSeparate}
+      />
     </div>
   );
 }
