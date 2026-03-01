@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@allape/use-loading": "github:allape/use-loading",
+    "cantonese-romanisation": "^1.0.7",
     "classnames": "^2.5.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

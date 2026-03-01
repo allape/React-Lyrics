@@ -1,0 +1,48 @@
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .source {
+    display: flex;
+
+    & > * {
+      flex: 1;
+    }
+
+    .conversion {
+      padding: 10px;
+      text-align: center;
+
+      .conversionResult {
+        white-space: break-spaces;
+        line-height: 30px;
+        user-select: all;
+      }
+    }
+  }
+
+  .message {
+    min-height: 100px;
+    font-size: 14px;
+    padding: 20px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .swapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    & > * {
+      flex: 1 1 100%;
+      display: flex;
+
+      textarea {
+        flex: 1;
+      }
+    }
+  }
+}
