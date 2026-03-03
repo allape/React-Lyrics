@@ -137,6 +137,7 @@ export const WordSplitterRegexps = {
     /([«¿¡(]?[-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.~«»/)]+|["“‘《(（]?\S[。，"”’)）》？！、～~.:：]*)\s*/gi,
   "Japanese Refined":
     /([«¿¡(]?[-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.»/)]+|["“‘《(（~]?\S[ぁぃぅぇぉっゃゅょゎゕゖァィゥェォッャュョヮヵヶーんン]*[。，"”’)）》？！、～~.:：]*)\s*/gi,
+  "Split By Space": /[^ ]+ */gi
 };
 
 export interface ILyricsCreatorProps {

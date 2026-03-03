@@ -1,12 +1,16 @@
 import { useProxy } from "@allape/use-loading";
 import { getRoman } from "cantonese-romanisation";
 import { ReactElement, useCallback, useEffect, useState } from "react";
+import { toRomaji } from "wanakana";
 import DroppableTextarea from "../../component/DroppableTextarea";
 import Lyrics from "../../core/lyrics.ts";
 import useSrcTextFromSearchParams from "../../hook/useSrcTextFromSearchParams.ts";
 import styles from "./style.module.scss";
 
-type ConversionType = "Pure Text" | "Cantonese Romanisation";
+type ConversionType =
+  | "Pure Text"
+  | "Cantonese Romanisation"
+  | "Japanese Romaji";
 
 type ConversionTypesHandler = (l: Lyrics) => string;
 
@@ -14,8 +18,8 @@ const ConversionTypesHandlers: Record<ConversionType, ConversionTypesHandler> =
   {
     "Pure Text": (l) => l.toString(),
     // FIXME The third-part package does NOT convert all chars
-    "Cantonese Romanisation": (l) =>
-      l.lines
+    "Cantonese Romanisation": (l) => {
+      return l.lines
         .map((line) =>
           line.syllables
             .map(
@@ -27,7 +31,15 @@ const ConversionTypesHandlers: Record<ConversionType, ConversionTypesHandler> =
             )
             .join(" "),
         )
-        .join("\n"),
+        .join("\n");
+    },
+    "Japanese Romaji": (l) => {
+      return l.lines
+        .map((line) =>
+          line.syllables.map((s) => toRomaji(s.text) || s.text).join(" "),
+        )
+        .join("\n");
+    },
   };
 
 const ConversionTypes = Object.keys(ConversionTypesHandlers);
@@ -43,7 +55,7 @@ export default function SyllableSwapper(): ReactElement {
     useState<ConversionType>("Pure Text");
 
   const [candidate, candidateRef, setCandidate] = useProxy<string>("");
-  const [result, /*resultRef*/, setResult] = useProxy<string>("");
+  const [result /*resultRef*/, , setResult] = useProxy<string>("");
 
   useEffect(() => {
     if (!text) {
@@ -91,7 +103,7 @@ export default function SyllableSwapper(): ReactElement {
     }
 
     lines.forEach((line, i) => {
-      const syllables = line.match(/[^ ]+ ?/gi);
+      const syllables = line.match(/[^ ]+ */gi);
       if (!syllables || syllables.length !== l.lines[i].syllables.length) {
         setMessage(
           `Line of ${i + 1} mismatch: [${syllables?.join(" ")}] != ${l.lines[i].syllables.map((s) => s.text).join(" ")}`,
