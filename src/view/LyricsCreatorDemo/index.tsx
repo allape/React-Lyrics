@@ -1,5 +1,7 @@
 import { ReactElement, useCallback, useState } from "react";
-import LyricsCreator from "../../component/LyricsCreator";
+import LyricsCreator, {
+  WordSplitterRegexps,
+} from "../../component/LyricsCreator";
 import { LyricsText, SRC } from "../../example/LInternationale.ts";
 import {
   LyricsText as NGGYULRC,
@@ -14,19 +16,23 @@ export default function LyricsCreatorDemo(): ReactElement {
 
   const [src, setSrc] = useState<string | undefined>(undefined);
   const [text, setText] = useState<string | undefined>(undefined);
+  const [regexp, setRegexp] = useState<string | undefined>(undefined);
 
-  const [useDoubleSpaceSeparate, setUseDoubleSpaceSeparate] = useState<boolean>(false);
+  const [useDoubleSpaceSeparate, setUseDoubleSpaceSeparate] =
+    useState<boolean>(false);
 
   const handleClick = useCallback(() => {
     setSrc(SRC);
     setText(LyricsText);
     setUseDoubleSpaceSeparate(false);
+    setRegexp(WordSplitterRegexps.Default.source);
   }, []);
 
   const handleNGGYU = useCallback(() => {
     setSrc(NGGYUSRC);
     setText(NGGYULRC);
     setUseDoubleSpaceSeparate(true);
+    setRegexp(WordSplitterRegexps["Split By Space"].source);
   }, []);
 
   return (
@@ -64,15 +70,14 @@ export default function LyricsCreatorDemo(): ReactElement {
         </p>
         <p>
           <button onClick={handleClick}>Try with demo song and lyrics</button>{" "}
-          <button onClick={handleNGGYU}>
-            Never Ganna Give You Up
-          </button>
+          <button onClick={handleNGGYU}>Never Ganna Give You Up</button>
         </p>
       </div>
       <hr />
       <LyricsCreator
         src={src || srcFromProps}
         text={text || textFromProps}
+        regexp={regexp}
         useDoubleSpaceSeparate={useDoubleSpaceSeparate}
       />
     </div>

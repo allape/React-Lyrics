@@ -137,12 +137,13 @@ export const WordSplitterRegexps = {
     /([«¿¡(]?[-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.~«»/)]+|["“‘《(（]?\S[。，"”’)）》？！、～~.:：]*)\s*/gi,
   "Japanese Refined":
     /([«¿¡(]?[-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.»/)]+|["“‘《(（~]?\S[ぁぃぅぇぉっゃゅょゎゕゖァィゥェォッャュョヮヵヶーんン]*[。，"”’)）》？！、～~.:：]*)\s*/gi,
-  "Split By Space": /[^ ]+ */gi
+  "Split By Space": /[^ ]+ */gi,
 };
 
 export interface ILyricsCreatorProps {
   text?: string;
   src?: string;
+  regexp?: string;
   audioSepURL?: string;
   whisperURL?: string;
   useDoubleSpaceSeparate?: boolean;
@@ -158,6 +159,7 @@ export default function LyricsCreator({
   whisperURL: whisperURLFromProps,
   text: textFromProps,
   src: srcFromProps,
+  regexp: regexpFromProps,
   useDoubleSpaceSeparate: useDoubleSpaceSeparateFromProps,
   onExport,
 }: ILyricsCreatorProps): ReactElement {
@@ -165,7 +167,7 @@ export default function LyricsCreator({
 
   const [text, textRef, setText] = useProxy<string>("");
   const [wordSplitterRegexp, wordSplitterRegexpRef, setWordSplitterRegexp] =
-    useProxy<string>(WordSplitterRegexps.Default.source);
+    useProxy<string>(regexpFromProps || WordSplitterRegexps.Default.source);
   const [lines, linesRef, setLines] = useProxy<string[][]>([]);
   const [lineIndex, lineIndexRef, setLineIndex] = useProxy<number>(0);
   const [syllableIndex, syllableIndexRef, setSyllableIndex] =
@@ -283,6 +285,11 @@ export default function LyricsCreator({
   useEffect(() => {
     handleReload();
   }, [handleReload, useDoubleSpaceSeparate]);
+
+  useEffect(() => {
+    setWordSplitterRegexp((o) => regexpFromProps || o);
+    handleReload();
+  }, [handleReload, regexpFromProps, setWordSplitterRegexp]);
 
   useEffect(() => {
     setUseDoubleSpaceSeparate(!!useDoubleSpaceSeparateFromProps);
