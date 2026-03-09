@@ -6,14 +6,14 @@ import LyricsCreatorDemo from "./view/LyricsCreatorDemo";
 import LyricsTimeLineDemo from "./view/LyricsTimeLineDemo";
 import SimplePlayer from "./view/SimplePlayer";
 import SyllableSwapper from "./view/SyllableSwapper";
-import WaveDiffDemo from "./view/WaveDiffDemo";
+import WaveCompareDemo from "./view/WaveCompareDemo";
 
 type Route =
   | "demo"
   | "lyrics-creator"
   | "simple-player"
   | "lyrics-timeline"
-  | "wave-diff"
+  | "wave-compare"
   | "syllable-swapper";
 
 const Routers: ILV<Route>[] = [
@@ -34,8 +34,8 @@ const Routers: ILV<Route>[] = [
     value: "lyrics-timeline",
   },
   {
-    label: "Audio Wave Diff",
-    value: "wave-diff",
+    label: "Audio Wave Compare",
+    value: "wave-compare",
   },
   {
     label: "Syllable Swapper",
@@ -89,7 +89,7 @@ export default function App(): ReactElement {
         {route === "simple-player" && <SimplePlayer />}
         {route === "lyrics-creator" && <LyricsCreatorDemo />}
         {route === "lyrics-timeline" && <LyricsTimeLineDemo />}
-        {route === "wave-diff" && <WaveDiffDemo />}
+        {route === "wave-compare" && <WaveCompareDemo />}
         {route === "syllable-swapper" && <SyllableSwapper />}
       </div>
     </div>

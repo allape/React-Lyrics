@@ -9,6 +9,7 @@ import styles from "./style.module.scss";
 
 type ConversionType =
   | "Pure Text"
+  | "Double Space Split"
   | "Cantonese Romanisation"
   | "Japanese Romaji";
 
@@ -17,6 +18,11 @@ type ConversionTypesHandler = (l: Lyrics) => string;
 const ConversionTypesHandlers: Record<ConversionType, ConversionTypesHandler> =
   {
     "Pure Text": (l) => l.toString(),
+    "Double Space Split": (l) => {
+      return l.lines
+        .map((line) => line.syllables.map((s) => s.text).join(" "))
+        .join("\n");
+    },
     // FIXME The third-part package does NOT convert all chars
     "Cantonese Romanisation": (l) => {
       return l.lines

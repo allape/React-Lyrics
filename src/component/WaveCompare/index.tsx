@@ -18,18 +18,18 @@ function randomColor(): string {
   return `hsl(${Math.random() * 360}, ${Math.random() * 100}%, ${Math.random() * 100}%)`;
 }
 
-export interface IWaveDiffProps extends HTMLProps<HTMLDivElement> {
+export interface IWaveCompareProps extends HTMLProps<HTMLDivElement> {
   sources?: string[];
   onMultiTrackLoaded?: (multitrack: Multitrack) => void;
   onMultiTrackDestroy?: () => void;
 }
 
-export default function WaveDiff({
+export default function WaveCompare({
   sources,
   onMultiTrackLoaded,
   onMultiTrackDestroy,
   ...props
-}: IWaveDiffProps): ReactElement {
+}: IWaveCompareProps): ReactElement {
   const loadedSources = useRef<string[]>([]);
 
   const [container, setContainer] = useState<HTMLDivElement | null>(null);

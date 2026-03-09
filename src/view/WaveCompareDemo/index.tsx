@@ -1,9 +1,9 @@
 import { ReactElement, useCallback, useRef, useState } from "react";
 import FileInput from "../../component/FileInput";
-import WaveDiff, { Multitrack } from "../../component/WaveDiff";
+import WaveCompare, { Multitrack } from "../../component/WaveCompare";
 import styles from "./style.module.scss";
 
-export default function WaveDiffDemo(): ReactElement {
+export default function WaveCompareDemo(): ReactElement {
   const multitrackRef = useRef<Multitrack | null>(null);
 
   const [file1, setFile1] = useState<string>("");
@@ -35,7 +35,7 @@ export default function WaveDiffDemo(): ReactElement {
       <FileInput value={file2} onChange={setFile2} />
       <div>
         <button onClick={handleToggle}>toggle play</button>
-        <WaveDiff
+        <WaveCompare
           sources={[file1, file2]}
           onMultiTrackLoaded={handleMtLoaded}
           onMultiTrackDestroy={handleMtDestroy}
