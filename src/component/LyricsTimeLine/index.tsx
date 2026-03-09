@@ -151,7 +151,7 @@ function LyricsTimeLine(
 
         let text = "";
         if (syllable.content instanceof HTMLElement) {
-          text = syllable.content.innerText;
+          text = syllable.content.innerHTML;
         } else if (typeof syllable.content === "string") {
           text = syllable.content;
         }
