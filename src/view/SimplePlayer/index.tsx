@@ -12,7 +12,7 @@ import FileInput from "../../component/FileInput";
 import Lyrics from "../../component/Lyrics";
 import { TimePoint } from "../../core/lyrics.ts";
 import useRAFAudioTime from "../../hook/useRAFAudioTime.ts";
-import useSrcTextFromSearchParams from "../../hook/useSrcTextFromSearchParams.ts";
+import useParamsFromSearchParams from "../../hook/useParamsFromSearchParams.ts";
 import styles from "./style.module.scss";
 
 export interface ISimplePlayerProps {
@@ -31,7 +31,7 @@ export default function SimplePlayer({
   const [url, setUrl] = useState<string | undefined>(urlFromProps);
   const [text, setText] = useState<string | undefined>(content);
 
-  const { src: srcFromSP, text: textFromSP } = useSrcTextFromSearchParams();
+  const { src: srcFromSP, text: textFromSP } = useParamsFromSearchParams();
 
   useEffect(() => {
     if (srcFromSP) {

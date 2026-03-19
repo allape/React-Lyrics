@@ -7,12 +7,16 @@ import {
   LyricsText as NGGYULRC,
   SRC as NGGYUSRC,
 } from "../../example/NeverGonnaGiveYouUp.ts";
-import useSrcTextFromSearchParams from "../../hook/useSrcTextFromSearchParams.ts";
+import useParamsFromSearchParams from "../../hook/useParamsFromSearchParams.ts";
 import styles from "./style.module.scss";
 
 export default function LyricsCreatorDemo(): ReactElement {
-  const { src: srcFromProps, text: textFromProps } =
-    useSrcTextFromSearchParams();
+  const {
+    src: srcFromProps,
+    text: textFromProps,
+    remoteTouchpadURL,
+    remoteTouchpadClientID,
+  } = useParamsFromSearchParams();
 
   const [src, setSrc] = useState<string | undefined>(undefined);
   const [text, setText] = useState<string | undefined>(undefined);
@@ -79,6 +83,8 @@ export default function LyricsCreatorDemo(): ReactElement {
         text={text || textFromProps}
         regexp={regexp}
         useDoubleSpaceSeparate={useDoubleSpaceSeparate}
+        remoteTouchpadURL={remoteTouchpadURL}
+        remoteTouchpadClientID={remoteTouchpadClientID}
       />
     </div>
   );

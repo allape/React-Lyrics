@@ -1,0 +1,31 @@
+.wrapper {
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  max-width: 500px;
+  margin: 0 auto;
+
+  .button {
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .message {
+    text-align: center;
+    padding: 10px;
+  }
+
+  .touchpad {
+    flex: 1;
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 8px solid black;
+    cursor: default;
+    background-color: darkgray;
+    min-height: 300px;
+  }
+}

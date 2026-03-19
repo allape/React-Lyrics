@@ -6,7 +6,7 @@ import LyricsTimeLine, {
   ILyricsTimeLineRef,
 } from "../../component/LyricsTimeLine";
 import { LyricsText, SRC } from "../../example/LInternationale.ts";
-import useSrcTextFromSearchParams from "../../hook/useSrcTextFromSearchParams.ts";
+import useParamsFromSearchParams from "../../hook/useParamsFromSearchParams.ts";
 import styles from "./style.module.scss";
 
 function log(...msg: unknown[]): void {
@@ -22,7 +22,7 @@ export default function LyricsTimeLineDemo(): ReactElement {
   const [renderingText, setRenderingText] = useState<string>(LyricsText);
   const [editable, setEditable] = useState<boolean>(false);
 
-  const { src: srcFromSP, text: textFromSP } = useSrcTextFromSearchParams();
+  const { src: srcFromSP, text: textFromSP } = useParamsFromSearchParams();
 
   useEffect(() => {
     if (srcFromSP) {

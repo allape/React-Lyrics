@@ -1,5 +1,6 @@
 import { useLoading, useProxy } from "@allape/use-loading";
 import cls from "classnames";
+import mqtt, { MqttClient } from "mqtt";
 import {
   DragEvent,
   ReactElement,
@@ -147,6 +148,8 @@ export interface ILyricsCreatorProps {
   audioSepURL?: string;
   whisperURL?: string;
   useDoubleSpaceSeparate?: boolean;
+  remoteTouchpadURL?: string;
+  remoteTouchpadClientID?: string;
   onExport?: (
     lyrics: string,
     lines: string[][],
@@ -161,6 +164,8 @@ export default function LyricsCreator({
   src: srcFromProps,
   regexp: regexpFromProps,
   useDoubleSpaceSeparate: useDoubleSpaceSeparateFromProps,
+  remoteTouchpadURL: remoteTouchpadURLFromProps,
+  remoteTouchpadClientID: remoteTouchpadClientIDFromProps,
   onExport,
 }: ILyricsCreatorProps): ReactElement {
   const { loading, execute } = useLoading();
@@ -459,13 +464,77 @@ export default function LyricsCreator({
     }
   }, [lineIndexRef, spectrogramRef]);
 
+  const isKeyDownRef = useRef(false);
+  const keyDownTimeRef = useRef<Millisecond>(0);
+
+  const handleNextSyllableKeyDown = useCallback(
+    (timeOffset: Millisecond = 0) => {
+      if (!audioRef.current) {
+        return;
+      }
+      if (!isKeyDownRef.current) {
+        isKeyDownRef.current = true;
+        keyDownTimeRef.current =
+          audioRef.current.currentTime * 1000 + timeOffset;
+      }
+    },
+    [audioRef],
+  );
+
+  const handleNextSyllableKeyUp = useCallback(
+    (nextOp?: KeyFunction | null) => {
+      if (!isKeyDownRef.current || !audioRef.current) {
+        return;
+      }
+
+      isKeyDownRef.current = false;
+
+      timePointsRef.current[lineIndexRef.current] = {
+        ...timePointsRef.current[lineIndexRef.current],
+        [syllableIndexRef.current]: [
+          Math.max(ZeroTimeReplaceTo, keyDownTimeRef.current),
+          Math.max(ZeroTimeReplaceTo, audioRef.current.currentTime * 1000),
+        ],
+      };
+
+      if (lineIndexRef.current >= linesRef.current.length) {
+        if (nextOp !== "RevokeLine") {
+          setLineIndex(linesRef.current.length);
+        }
+      } else {
+        if (nextOp === "NextSyllable") {
+          if (
+            syllableIndexRef.current + 1 >=
+            linesRef.current[lineIndexRef.current].length
+          ) {
+            setLineIndex(lineIndexRef.current + 1);
+            setSyllableIndex(0);
+          } else {
+            setSyllableIndex(syllableIndexRef.current + 1);
+          }
+        } else if (nextOp === "NextLine") {
+          setLineIndex(lineIndexRef.current + 1);
+          setSyllableIndex(0);
+        }
+      }
+
+      scrollToCurrentLine();
+    },
+    [
+      audioRef,
+      lineIndexRef,
+      linesRef,
+      scrollToCurrentLine,
+      setLineIndex,
+      setSyllableIndex,
+      syllableIndexRef,
+    ],
+  );
+
   useEffect(() => {
     if (!container) {
       return;
     }
-
-    let keyDownTime: Millisecond = 0;
-    let isKeyDown = false;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!audioRef.current) {
@@ -529,15 +598,12 @@ export default function LyricsCreator({
             return i;
           });
           touched = true;
-          isKeyDown = true;
+          isKeyDownRef.current = true;
           break;
 
         case "NextSyllable":
         case "NextLine":
-          if (!isKeyDown) {
-            isKeyDown = true;
-            keyDownTime = audioRef.current.currentTime * 1000;
-          }
+          handleNextSyllableKeyDown();
           touched = true;
           break;
         case "PlaybackRate1":
@@ -558,44 +624,9 @@ export default function LyricsCreator({
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (!isKeyDown || !audioRef.current) {
-        return;
-      }
-
-      isKeyDown = false;
-
-      timePointsRef.current[lineIndexRef.current] = {
-        ...timePointsRef.current[lineIndexRef.current],
-        [syllableIndexRef.current]: [
-          Math.max(ZeroTimeReplaceTo, keyDownTime),
-          Math.max(ZeroTimeReplaceTo, audioRef.current.currentTime * 1000),
-        ],
-      };
-
-      const func = KeyCodeToFunction(e.code, KeyboardEventToMask(e));
-
-      if (lineIndexRef.current >= linesRef.current.length) {
-        if (func !== "RevokeLine") {
-          setLineIndex(linesRef.current.length);
-        }
-      } else {
-        if (func === "NextSyllable") {
-          if (
-            syllableIndexRef.current + 1 >=
-            linesRef.current[lineIndexRef.current].length
-          ) {
-            setLineIndex(lineIndexRef.current + 1);
-            setSyllableIndex(0);
-          } else {
-            setSyllableIndex(syllableIndexRef.current + 1);
-          }
-        } else if (func === "NextLine") {
-          setLineIndex(lineIndexRef.current + 1);
-          setSyllableIndex(0);
-        }
-      }
-
-      scrollToCurrentLine();
+      handleNextSyllableKeyUp(
+        KeyCodeToFunction(e.code, KeyboardEventToMask(e)),
+      );
     };
 
     container.addEventListener("keydown", handleKeyDown);
@@ -624,17 +655,16 @@ export default function LyricsCreator({
       window.removeEventListener("keyup", handleWindowKeyup);
     };
   }, [
+    audioRef,
+    container,
+    handleNextSyllableKeyDown,
+    handleNextSyllableKeyUp,
     handleSeek,
+    handleTogglePlay,
     lineIndexRef,
-    linesRef,
+    scrollToCurrentLine,
     setLineIndex,
     setSyllableIndex,
-    syllableIndexRef,
-    container,
-    handleTogglePlay,
-    audioRef,
-    spectrogramRef,
-    scrollToCurrentLine,
   ]);
 
   const handleAudioLoaded = useCallback(
@@ -702,11 +732,134 @@ export default function LyricsCreator({
     ],
   );
 
+  const remoteTouchpadMqttClientRef = useRef<MqttClient | null>(null);
+  const remoteTouchpadPingerTimerRef = useRef<number>(-1);
+  const remoteTouchpadServerTimeDiffRef = useRef<number>(0);
+
+  const [remoteTouchpadURL, remoteTouchpadURLRef, setRemoteTouchpadURL] =
+    useProxy<string>("mqtt://127.0.0.1:8080");
+  const [
+    remoteTouchpadClientID,
+    remoteTouchpadClientIDRef,
+    setRemoteTouchpadClientID,
+  ] = useProxy<string>("1234");
+
+  useEffect(() => {
+    setRemoteTouchpadURL(remoteTouchpadURLFromProps || "");
+  }, [remoteTouchpadURLFromProps, setRemoteTouchpadURL]);
+
+  useEffect(() => {
+    setRemoteTouchpadClientID(remoteTouchpadClientIDFromProps || "");
+  }, [remoteTouchpadClientIDFromProps, setRemoteTouchpadClientID]);
+
+  useEffect(() => {
+    setRemoteTouchpadURL(`mqtt://${location.hostname}:8080`);
+    setRemoteTouchpadClientID("1234");
+  }, [setRemoteTouchpadClientID, setRemoteTouchpadURL]);
+
+  const [remoteTouchpadConnected, setRemoteTouchpadConnected] =
+    useState<boolean>(false);
+
+  const handleRemoteTouchpadDisconnect = useCallback(async () => {
+    clearInterval(remoteTouchpadPingerTimerRef.current);
+
+    setRemoteTouchpadConnected(false);
+    const client = remoteTouchpadMqttClientRef.current;
+    if (!client || client.disconnected) {
+      return;
+    }
+
+    await client.endAsync();
+    remoteTouchpadMqttClientRef.current = null;
+  }, []);
+
+  const handleRemoteTouchpadClick = useCallback(() => {
+    execute(async () => {
+      if (remoteTouchpadMqttClientRef.current) {
+        handleRemoteTouchpadDisconnect().then();
+        return;
+      }
+
+      remoteTouchpadMqttClientRef.current = mqtt.connect(
+        remoteTouchpadURLRef.current,
+      );
+      const client = remoteTouchpadMqttClientRef.current;
+
+      client.on("connect", () => {
+        setRemoteTouchpadConnected(true);
+      });
+
+      const DownTopic = `${remoteTouchpadClientIDRef.current}:keydown`;
+      const UpTopic = `${remoteTouchpadClientIDRef.current}:keyup`;
+      const PingTopic = `${remoteTouchpadClientIDRef.current}:ping`;
+      const PongTopic = `${remoteTouchpadClientIDRef.current}:pong`;
+
+      const pingTime = Date.now();
+
+      client.subscribe([DownTopic, UpTopic]);
+      client.on("message", (topic, message) => {
+        const now = Date.now();
+        const serverTime = parseInt(message.toString()) || now;
+        const diff = Math.abs(
+          now + remoteTouchpadServerTimeDiffRef.current - serverTime,
+        );
+
+        // console.log("Received MQTT Message", topic, diff);
+
+        switch (topic) {
+          case DownTopic:
+            handleNextSyllableKeyDown(-diff);
+            break;
+          case UpTopic:
+            handleNextSyllableKeyUp("NextSyllable");
+            break;
+          case PongTopic: {
+            const delay = Date.now() - pingTime;
+            remoteTouchpadServerTimeDiffRef.current =
+              pingTime - serverTime - delay / 2;
+            break;
+          }
+          default:
+            console.warn(`Unknown topic: ${topic}`, message.toString());
+        }
+      });
+
+      client.publish(PingTopic, `${pingTime}`);
+
+      client.on("disconnect", () => {
+        handleRemoteTouchpadDisconnect();
+      });
+
+      client.on("error", (err) => {
+        console.error("MQTT Error:", err);
+      });
+
+      remoteTouchpadPingerTimerRef.current = setInterval(() => {
+        client.sendPing();
+      }, 5000) as unknown as number;
+
+      setRemoteTouchpadConnected(true);
+    }).then();
+  }, [
+    execute,
+    handleNextSyllableKeyDown,
+    handleNextSyllableKeyUp,
+    handleRemoteTouchpadDisconnect,
+    remoteTouchpadClientIDRef,
+    remoteTouchpadURLRef,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      handleRemoteTouchpadDisconnect().then();
+    };
+  }, [handleRemoteTouchpadDisconnect]);
+
   return (
     <div className={styles.wrapper}>
       <FileInput value={audioURL} onChange={setAudioURL} onFile={handleFile} />
       <hr ref={titleRef} />
-      <div className={styles.advanced}>
+      <div className={styles.advanced} style={{ display: "none" }}>
         <div className={styles.controls}>
           <label onClick={() => setAudioSepEnabled((i) => !i)}>
             {loading && audioSepEnabled
@@ -734,7 +887,7 @@ export default function LyricsCreator({
         />
         <hr />
       </div>
-      <div className={styles.advanced}>
+      <div className={styles.advanced} style={{ display: "none" }}>
         <div className={styles.controls}>
           <label onClick={() => setWhisperEnabled((i) => !i)}>
             {loading && whisperEnabled ? "Whispering..." : "Speech to Text:"}
@@ -760,6 +913,27 @@ export default function LyricsCreator({
         />
         <hr />
       </div>
+      <label>Remote Touchpad:</label>
+      <div className={styles.advanced}>
+        <input
+          disabled={remoteTouchpadConnected}
+          placeholder="Remote Touchpad URL"
+          type="text"
+          value={remoteTouchpadURL}
+          onChange={(e) => setRemoteTouchpadURL(e.target.value)}
+        />
+        <input
+          disabled={remoteTouchpadConnected}
+          placeholder="Remote Touchpad Client ID"
+          type="text"
+          value={remoteTouchpadClientID}
+          onChange={(e) => setRemoteTouchpadClientID(e.target.value)}
+        />
+        <button disabled={loading} onClick={handleRemoteTouchpadClick}>
+          {remoteTouchpadConnected ? "Disconnect" : "Connect"}
+        </button>
+      </div>
+      <hr />
       <label>Word Split RegExp:</label>
       <div className={styles.wordSplitter}>
         <select

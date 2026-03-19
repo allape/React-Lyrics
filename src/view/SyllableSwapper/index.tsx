@@ -4,7 +4,7 @@ import { ReactElement, useCallback, useEffect, useState } from "react";
 import { toRomaji } from "wanakana";
 import DroppableTextarea from "../../component/DroppableTextarea";
 import Lyrics from "../../core/lyrics.ts";
-import useSrcTextFromSearchParams from "../../hook/useSrcTextFromSearchParams.ts";
+import useParamsFromSearchParams from "../../hook/useParamsFromSearchParams.ts";
 import styles from "./style.module.scss";
 
 type ConversionType =
@@ -51,7 +51,7 @@ const ConversionTypesHandlers: Record<ConversionType, ConversionTypesHandler> =
 const ConversionTypes = Object.keys(ConversionTypesHandlers);
 
 export default function SyllableSwapper(): ReactElement {
-  const { text: textFromSP } = useSrcTextFromSearchParams();
+  const { text: textFromSP } = useParamsFromSearchParams();
 
   const [text, textRef, setText] = useProxy<string | undefined>(undefined);
   const [message, setMessage] = useState<string>();
