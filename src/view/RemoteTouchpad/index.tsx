@@ -34,6 +34,8 @@ export default function RemoteTouchpad(): ReactElement {
     remoteTouchpadClientID: remoteTouchpadClientIDFromProps,
   } = useParamsFromSearchParams();
 
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
   const mqttClientRef = useRef<MqttClient | null>(null);
   const pingerTimerRef = useRef<number>(-1);
 
@@ -153,17 +155,25 @@ export default function RemoteTouchpad(): ReactElement {
 
       setConnected(true);
       setMessage("Connected");
+
+      if (wakeLockRef.current) {
+        await wakeLockRef.current.release();
+      }
+      wakeLockRef.current = await navigator.wakeLock.request("screen");
     }).then();
   }, [clientIdRef, execute, urlRef]);
 
   useEffect(() => {
-    let wakeLock: WakeLockSentinel | null = null;
-
     const handleVisibilityChange = async () => {
+      if (wakeLockRef.current) {
+        await wakeLockRef.current.release();
+      }
+
       if (document.visibilityState === "visible") {
-        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLockRef.current = await navigator.wakeLock.request("screen");
       } else {
-        await wakeLock?.release();
+        await wakeLockRef.current?.release();
+        wakeLockRef.current = null;
       }
     };
 
@@ -173,7 +183,9 @@ export default function RemoteTouchpad(): ReactElement {
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      wakeLock?.release().then();
+      wakeLockRef.current?.release().then(() => {
+        wakeLockRef.current = null;
+      });
     };
   }, []);
 
