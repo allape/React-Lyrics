@@ -1,0 +1,15 @@
+.touchpad {
+  flex: 1;
+  user-select: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 8px solid black;
+  cursor: default;
+  background-color: #333;
+  min-height: 300px;
+
+  &:active {
+    background-color: #444;
+  }
+}

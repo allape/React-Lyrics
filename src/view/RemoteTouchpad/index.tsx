@@ -21,6 +21,7 @@
 import { useLoading, useProxy } from "@allape/use-loading";
 import mqtt, { MqttClient } from "mqtt";
 import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
+import TouchPad from "../../component/TouchPad";
 import useParamsFromSearchParams from "../../hook/useParamsFromSearchParams.ts";
 import styles from "./style.module.scss";
 
@@ -42,7 +43,6 @@ export default function RemoteTouchpad(): ReactElement {
   const { loading, execute } = useLoading();
 
   const [connected, setConnected] = useState<boolean>(false);
-  const [touchpad, setTouchpad] = useState<HTMLElement | null>(null);
 
   const [url, urlRef, setUrl] = useProxy<string>("mqtt://127.0.0.1:8080");
   const [clientId, clientIdRef, setClientId] = useProxy<string>("1234");
@@ -63,53 +63,19 @@ export default function RemoteTouchpad(): ReactElement {
     setClientId("1234");
   }, [setClientId, setUrl]);
 
-  useEffect(() => {
-    if (!touchpad) return;
+  const handleTouchUp = useCallback((): void => {
+    const client = mqttClientRef.current;
+    if (!client) return;
 
-    const handleUp = (): void => {
-      const client = mqttClientRef.current;
-      if (!client) return;
+    client.publish(`${clientIdRef.current}:keyup`, now());
+  }, [clientIdRef]);
 
-      client.publish(`${clientIdRef.current}:keyup`, now());
-    };
+  const handleTouchDown = useCallback(() => {
+    const client = mqttClientRef.current;
+    if (!client) return;
 
-    const handleDown = () => {
-      const client = mqttClientRef.current;
-      if (!client) return;
-
-      client.publish(`${clientIdRef.current}:keydown`, now());
-    };
-
-    const handleDownEvent = (e: Event): void => {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      handleDown();
-    };
-
-    const handleUpEvent = (e: Event): void => {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      handleUp();
-    };
-
-    touchpad.addEventListener("touchstart", handleDownEvent, true);
-    touchpad.addEventListener("touchend", handleUpEvent, true);
-
-    touchpad.addEventListener("mousedown", handleDownEvent, true);
-    touchpad.addEventListener("mouseup", handleUpEvent, true);
-
-    window.addEventListener("blur", handleUp);
-
-    return () => {
-      touchpad.removeEventListener("touchstart", handleDownEvent, true);
-      touchpad.removeEventListener("touchend", handleUpEvent, true);
-
-      touchpad.removeEventListener("mousedown", handleDownEvent, true);
-      touchpad.removeEventListener("mouseup", handleUpEvent, true);
-
-      window.removeEventListener("blur", handleUp);
-    };
-  }, [clientIdRef, touchpad]);
+    client.publish(`${clientIdRef.current}:keydown`, now());
+  }, [clientIdRef]);
 
   useEffect(() => {
     return () => {
@@ -214,9 +180,7 @@ export default function RemoteTouchpad(): ReactElement {
         {connected ? "Disconnect" : "Connect"}
       </button>
       <div className={styles.message}>{message}</div>
-      <div ref={setTouchpad} className={styles.touchpad}>
-        Touch Pad
-      </div>
+      <TouchPad onTouchUp={handleTouchUp} onTouchDown={handleTouchDown} />
     </div>
   );
 }

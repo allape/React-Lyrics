@@ -6,6 +6,7 @@ import {
   ReactElement,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -18,6 +19,7 @@ import Lyrics, {
   TimePoint,
 } from "../../core/lyrics.ts";
 import FileInput from "../FileInput";
+import TouchPad from "../TouchPad";
 import WaveForm from "../Waveform";
 import styles from "./style.module.scss";
 
@@ -855,6 +857,18 @@ export default function LyricsCreator({
     };
   }, [handleRemoteTouchpadDisconnect]);
 
+  const enableTouchPad = useMemo(() => {
+    return window.ontouchstart !== undefined;
+  }, []);
+
+  const handleTouchPadTouchDown = useCallback(() => {
+    handleNextSyllableKeyDown();
+  }, [handleNextSyllableKeyDown]);
+
+  const handleTouchPadTouchUp = useCallback(() => {
+    handleNextSyllableKeyUp("NextSyllable");
+  }, [handleNextSyllableKeyUp]);
+
   return (
     <div className={styles.wrapper}>
       <FileInput value={audioURL} onChange={setAudioURL} onFile={handleFile} />
@@ -1054,6 +1068,13 @@ export default function LyricsCreator({
       <div className={styles.buttons}>
         <button onClick={handleExport}>Export</button>
       </div>
+      {enableTouchPad && (
+        <TouchPad
+          className={styles.touchpad}
+          onTouchDown={handleTouchPadTouchDown}
+          onTouchUp={handleTouchPadTouchUp}
+        />
+      )}
     </div>
   );
 }

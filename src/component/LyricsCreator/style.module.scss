@@ -173,4 +173,12 @@
       cursor: pointer;
     }
   }
+
+  .touchpad {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 300px;
+    min-height: 150px;
+  }
 }
