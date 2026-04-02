@@ -7,6 +7,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import styles from "./style.module.scss";
 
 export interface IFileInputProps
   extends Omit<HTMLProps<HTMLInputElement>, "value" | "onChange"> {
@@ -85,7 +86,8 @@ export default function FileInput({
   );
 
   return (
-    <>
+    <div className={styles.wrapper}>
+      <input type="file" onChange={handleFileChange} />
       <input
         placeholder="Input URL or drop file here"
         {...props}
@@ -94,7 +96,6 @@ export default function FileInput({
         onChange={(e) => setText(e.target.value)}
         onDrop={handleFileChange}
       />
-      <input type="file" onChange={handleFileChange} />
-    </>
+    </div>
   );
 }

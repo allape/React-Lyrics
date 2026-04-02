@@ -6,16 +6,15 @@
 
   .navigator {
     padding: 10px 0;
+    white-space: pre-wrap;
 
     .route {
+      display: inline-block;
       padding: 4px 10px;
       color: black;
+      white-space: nowrap;
       @media (prefers-color-scheme: dark) {
         color: white;
-      }
-
-      &:not(:first-child) {
-        border-left: 1px solid lightgray;
       }
     }
   }

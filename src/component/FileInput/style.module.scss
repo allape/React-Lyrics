@@ -1,0 +1,10 @@
+.wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  input:not([type=file]) {
+    flex: 1 1 100%;
+  }
+}

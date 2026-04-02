@@ -15,5 +15,9 @@
   .message {
     text-align: center;
     padding: 10px;
+
+    &:not(.okay) {
+      color: orangered;
+    }
   }
 }

@@ -1,6 +1,5 @@
 import { useLoading, useProxy } from "@allape/use-loading";
 import cls from "classnames";
-import mqtt, { MqttClient } from "mqtt";
 import {
   DragEvent,
   ReactElement,
@@ -18,6 +17,7 @@ import Lyrics, {
   StartTimePoint,
   TimePoint,
 } from "../../core/lyrics.ts";
+import useRemoteTouchPad from "../../hook/useRemoteTouchPad.tsx";
 import FileInput from "../FileInput";
 import TouchPad from "../TouchPad";
 import WaveForm from "../Waveform";
@@ -734,128 +734,31 @@ export default function LyricsCreator({
     ],
   );
 
-  const remoteTouchpadMqttClientRef = useRef<MqttClient | null>(null);
-  const remoteTouchpadPingerTimerRef = useRef<number>(-1);
-  const remoteTouchpadServerTimeDiffRef = useRef<number>(0);
-
-  const [remoteTouchpadURL, remoteTouchpadURLRef, setRemoteTouchpadURL] =
-    useProxy<string>("mqtt://127.0.0.1:8080");
-  const [
+  const {
+    remoteTouchpadURL,
+    setRemoteTouchpadURL,
     remoteTouchpadClientID,
-    remoteTouchpadClientIDRef,
     setRemoteTouchpadClientID,
-  ] = useProxy<string>("1234");
-
-  useEffect(() => {
-    setRemoteTouchpadURL(remoteTouchpadURLFromProps || "");
-  }, [remoteTouchpadURLFromProps, setRemoteTouchpadURL]);
-
-  useEffect(() => {
-    setRemoteTouchpadClientID(remoteTouchpadClientIDFromProps || "");
-  }, [remoteTouchpadClientIDFromProps, setRemoteTouchpadClientID]);
-
-  useEffect(() => {
-    setRemoteTouchpadURL(`mqtt://${location.hostname}:8080`);
-    setRemoteTouchpadClientID("1234");
-  }, [setRemoteTouchpadClientID, setRemoteTouchpadURL]);
-
-  const [remoteTouchpadConnected, setRemoteTouchpadConnected] =
-    useState<boolean>(false);
-
-  const handleRemoteTouchpadDisconnect = useCallback(async () => {
-    clearInterval(remoteTouchpadPingerTimerRef.current);
-
-    setRemoteTouchpadConnected(false);
-    const client = remoteTouchpadMqttClientRef.current;
-    if (!client || client.disconnected) {
-      return;
-    }
-
-    await client.endAsync();
-    remoteTouchpadMqttClientRef.current = null;
-  }, []);
-
-  const handleRemoteTouchpadClick = useCallback(() => {
-    execute(async () => {
-      if (remoteTouchpadMqttClientRef.current) {
-        handleRemoteTouchpadDisconnect().then();
-        return;
-      }
-
-      remoteTouchpadMqttClientRef.current = mqtt.connect(
-        remoteTouchpadURLRef.current,
-      );
-      const client = remoteTouchpadMqttClientRef.current;
-
-      client.on("connect", () => {
-        setRemoteTouchpadConnected(true);
-      });
-
-      const DownTopic = `${remoteTouchpadClientIDRef.current}:keydown`;
-      const UpTopic = `${remoteTouchpadClientIDRef.current}:keyup`;
-      const PingTopic = `${remoteTouchpadClientIDRef.current}:ping`;
-      const PongTopic = `${remoteTouchpadClientIDRef.current}:pong`;
-
-      const pingTime = Date.now();
-
-      client.subscribe([DownTopic, UpTopic]);
-      client.on("message", (topic, message) => {
-        const now = Date.now();
-        const serverTime = parseInt(message.toString()) || now;
-        const diff = Math.abs(
-          now + remoteTouchpadServerTimeDiffRef.current - serverTime,
-        );
-
-        // console.log("Received MQTT Message", topic, diff);
-
-        switch (topic) {
-          case DownTopic:
-            handleNextSyllableKeyDown(-diff);
-            break;
-          case UpTopic:
-            handleNextSyllableKeyUp("NextSyllable");
-            break;
-          case PongTopic: {
-            const delay = Date.now() - pingTime;
-            remoteTouchpadServerTimeDiffRef.current =
-              pingTime - serverTime - delay / 2;
-            break;
-          }
-          default:
-            console.warn(`Unknown topic: ${topic}`, message.toString());
-        }
-      });
-
-      client.publish(PingTopic, `${pingTime}`);
-
-      client.on("disconnect", () => {
-        handleRemoteTouchpadDisconnect();
-      });
-
-      client.on("error", (err) => {
-        console.error("MQTT Error:", err);
-      });
-
-      remoteTouchpadPingerTimerRef.current = setInterval(() => {
-        client.sendPing();
-      }, 5000) as unknown as number;
-
-      setRemoteTouchpadConnected(true);
-    }).then();
-  }, [
-    execute,
-    handleNextSyllableKeyDown,
-    handleNextSyllableKeyUp,
-    handleRemoteTouchpadDisconnect,
-    remoteTouchpadClientIDRef,
-    remoteTouchpadURLRef,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      handleRemoteTouchpadDisconnect().then();
-    };
-  }, [handleRemoteTouchpadDisconnect]);
+    remoteTouchpadConnected,
+    connect: handleRemoteTouchpadClick,
+  } = useRemoteTouchPad(
+    useMemo(
+      () => ({
+        execute,
+        remoteTouchpadURL: remoteTouchpadURLFromProps,
+        remoteTouchpadClientID: remoteTouchpadClientIDFromProps,
+        onTouchDown: handleNextSyllableKeyDown,
+        onTouchUp: () => handleNextSyllableKeyUp("NextSyllable"),
+      }),
+      [
+        execute,
+        handleNextSyllableKeyDown,
+        handleNextSyllableKeyUp,
+        remoteTouchpadClientIDFromProps,
+        remoteTouchpadURLFromProps,
+      ],
+    ),
+  );
 
   const enableTouchPad = useMemo(() => {
     return window.ontouchstart !== undefined;
@@ -871,8 +774,6 @@ export default function LyricsCreator({
 
   return (
     <div className={styles.wrapper}>
-      <FileInput value={audioURL} onChange={setAudioURL} onFile={handleFile} />
-      <hr ref={titleRef} />
       <div className={styles.advanced} style={{ display: "none" }}>
         <div className={styles.controls}>
           <label onClick={() => setAudioSepEnabled((i) => !i)}>
@@ -928,10 +829,11 @@ export default function LyricsCreator({
         <hr />
       </div>
       <label>Remote Touchpad:</label>
-      <div className={styles.advanced}>
+      <div className={cls(styles.advanced, styles.remoteTouchPadControls)}>
         <input
           disabled={remoteTouchpadConnected}
           placeholder="Remote Touchpad URL"
+          title="Remote Touchpad URL"
           type="text"
           value={remoteTouchpadURL}
           onChange={(e) => setRemoteTouchpadURL(e.target.value)}
@@ -939,6 +841,7 @@ export default function LyricsCreator({
         <input
           disabled={remoteTouchpadConnected}
           placeholder="Remote Touchpad Client ID"
+          title="Remote Touchpad Client ID"
           type="text"
           value={remoteTouchpadClientID}
           onChange={(e) => setRemoteTouchpadClientID(e.target.value)}
@@ -948,6 +851,9 @@ export default function LyricsCreator({
         </button>
       </div>
       <hr />
+      <label>Audio File:</label>
+      <FileInput value={audioURL} onChange={setAudioURL} onFile={handleFile} />
+      <hr ref={titleRef} />
       <label>Word Split RegExp:</label>
       <div className={styles.wordSplitter}>
         <select

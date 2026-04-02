@@ -19,6 +19,7 @@
  */
 
 import { useLoading, useProxy } from "@allape/use-loading";
+import cls from "classnames";
 import mqtt, { MqttClient } from "mqtt";
 import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import TouchPad from "../../component/TouchPad";
@@ -48,6 +49,7 @@ export default function RemoteTouchpad(): ReactElement {
   const [clientId, clientIdRef, setClientId] = useProxy<string>("1234");
 
   const [message, setMessage] = useState<string>("Standby");
+  const [okay, setOkay] = useState<boolean>(true);
 
   useEffect(() => {
     setUrl(remoteTouchpadURLFromProps || "");
@@ -106,14 +108,34 @@ export default function RemoteTouchpad(): ReactElement {
         }
       });
 
+      client.on("connect", () => {
+        setMessage("Connected");
+        setOkay(true);
+      });
+
       client.on("disconnect", () => {
         mqttClientRef.current = null;
         setConnected(false);
+        setOkay(true);
+        setMessage("Standby");
+      });
+
+      client.on("offline", () => {
+        setMessage("Offline");
+        setOkay(false);
+      });
+
+      client.on("reconnect", () => {
+        setMessage("Reconnecting");
+        setOkay(false);
       });
 
       client.on("error", (err: Error) => {
         setMessage(err.message);
+        setOkay(false);
       });
+
+      client.publish(`${clientIdRef.current}:new-client`, now());
 
       pingerTimerRef.current = setInterval(() => {
         client.sendPing();
@@ -121,6 +143,7 @@ export default function RemoteTouchpad(): ReactElement {
 
       setConnected(true);
       setMessage("Connected");
+      setOkay(true);
 
       if (wakeLockRef.current) {
         await wakeLockRef.current.release();
@@ -179,7 +202,7 @@ export default function RemoteTouchpad(): ReactElement {
       >
         {connected ? "Disconnect" : "Connect"}
       </button>
-      <div className={styles.message}>{message}</div>
+      <div className={cls(styles.message, okay && styles.okay)}>{message}</div>
       <TouchPad onTouchUp={handleTouchUp} onTouchDown={handleTouchDown} />
     </div>
   );
