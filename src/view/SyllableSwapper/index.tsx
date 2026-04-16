@@ -109,6 +109,11 @@ export default function SyllableSwapper(): ReactElement {
     }
 
     lines.forEach((line, i) => {
+      if (l.lines[i].syllables.length === 1) {
+        l.lines[i].syllables[0].text = line;
+        return;
+      }
+
       const syllables = line.match(/[^ ]+ */gi);
       if (!syllables || syllables.length !== l.lines[i].syllables.length) {
         setMessage(
