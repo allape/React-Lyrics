@@ -30,7 +30,7 @@ export interface IClassNames {
   currentx?: Record<number, string>;
   syllable?: string;
   karaoke?: string;
-  truth?: string;
+  underlying?: string;
   hasLeadingSpace?: string;
   hasTrailingSpace?: string;
   mask?: string;
@@ -188,8 +188,8 @@ export default function Lyrics({
                   >
                     <div
                       className={cls(
-                        styles.truth,
-                        classNames?.truth,
+                        styles.underlying,
+                        classNames?.underlying,
                         spaceClassNames,
                       )}
                       style={stylesFromProps?.syllable}
