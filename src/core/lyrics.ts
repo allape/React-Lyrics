@@ -69,6 +69,13 @@ export default class Lyrics {
       if (lineDiff > 0 && (diff < 0 || lineDiff <= diff)) {
         line.st = prevLine.et;
       }
+
+      // special adapt for
+      // [00:30.00]A[00:31.00][00:30.00]B[00:31.00]...
+      // [00:30.00]alpha[00:31.00][00:30.00]beta[00:31.00]...
+      if (line.syllables[0] && prevLine.syllables[0]?.st === line.syllables[0]?.st) {
+        line.st = prevLine.st;
+      }
     });
     return this.lines;
   }

@@ -1,3 +1,7 @@
+@mixin AnimationTransition {
+  transition: opacity 0.25s, scale 0.25s;
+}
+
 .wrapper {
   overflow-x: hidden;
 
@@ -9,25 +13,29 @@
     padding: 0 10px;
 
     .line {
+      @include AnimationTransition;
       margin: 30px 0;
       font-size: 20px;
       cursor: pointer;
-      transition: 0.25s;
       user-select: none;
       display: flex;
       justify-content: center;
       align-items: center;
       flex-wrap: wrap;
 
+      // opacity and scale
       & {
         .syllable {
           opacity: 0.2;
+          @include AnimationTransition;
 
           &.karaoke {
             opacity: 0.4;
+            @include AnimationTransition;
 
             .underlying {
               opacity: 0.4;
+              @include AnimationTransition;
             }
           }
         }
