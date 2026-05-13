@@ -345,102 +345,107 @@ export default function LyricsCreator({
     [audioRef],
   );
 
-  const handleExport = useCallback(() => {
-    if (!linesRef.current.length) {
-      alert("No lyrics to export");
-      return;
-    }
-
-    const isKaraoke = !!Object.values(timePointsRef.current).find(
-      (line) => Object.keys(line).length > 1,
-    );
-
-    if (isKaraoke) {
-      linesRef.current.forEach((line, index) => {
-        const syllableLength = line.length;
-
-        const timePoints = timePointsRef.current[index];
-        if (!timePoints) {
-          return;
-        }
-
-        const availableTimePointLength = Object.keys(timePoints).length;
-
-        if (
-          syllableLength === 0 ||
-          syllableLength <= availableTimePointLength
-        ) {
-          return;
-        }
-
-        const lastTimePoint: [StartTimePoint, EndTimePoint] =
-          Object.values(timePoints).slice(-1)[0];
-        const interval: Millisecond =
-          (lastTimePoint[1] - lastTimePoint[0]) /
-          (syllableLength - availableTimePointLength);
-
-        for (
-          let i = availableTimePointLength - 1, j = 0;
-          i < syllableLength;
-          i++, j++
-        ) {
-          timePointsRef.current[index][i] = [
-            lastTimePoint[0] + j * interval,
-            lastTimePoint[0] + (j + 1) * interval,
-          ];
-        }
-      });
-    }
-
-    const lyrics = linesRef.current
-      .map((line, index) => {
-        const timePoints = timePointsRef.current[index];
-        if (!timePoints) {
-          return line.join("");
-        }
-
-        const tps = Object.entries(timePoints);
-        const syllables: string[] = [];
-        for (let i = 0; i < line.length; i++) {
-          let syllable = line[i];
-          const st =
-            tps[i]?.[1]?.[0] !== undefined
-              ? Lyrics.toStringTimePoint(tps[i][1][0])
-              : "";
-          const et =
-            tps[i]?.[1]?.[1] !== undefined
-              ? Lyrics.toStringTimePoint(tps[i][1][1])
-              : "";
-          if (i === tps.length - 1) {
-            syllable = line.slice(i).join("");
-            i = line.length;
-          }
-          syllables.push(`${st}${syllable}${et}`);
-        }
-
-        return syllables.join("");
-      })
-      .join("\n");
-
-    if (onExport) {
-      onExport(lyrics, linesRef.current, timePointsRef.current);
-    } else {
-      let filename: string | null = `${fileNameRef.current || "lyrics"}.lrcp`;
-      filename = window.prompt("Filename", filename);
-      if (!filename) {
-        console.log("No filename, export cancelled");
+  const handleExport = useCallback(
+    (onExportArg?: ILyricsCreatorProps["onExport"]) => {
+      if (!linesRef.current.length) {
+        alert("No lyrics to export");
         return;
       }
-      const blob = new Blob([lyrics], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${fileNameRef.current || "lyrics"}.lrcp`;
-      a.click();
-      a.remove();
-      handleBackToTop();
-    }
-  }, [handleBackToTop, linesRef, onExport]);
+
+      const isKaraoke = !!Object.values(timePointsRef.current).find(
+        (line) => Object.keys(line).length > 1,
+      );
+
+      if (isKaraoke) {
+        linesRef.current.forEach((line, index) => {
+          const syllableLength = line.length;
+
+          const timePoints = timePointsRef.current[index];
+          if (!timePoints) {
+            return;
+          }
+
+          const availableTimePointLength = Object.keys(timePoints).length;
+
+          if (
+            syllableLength === 0 ||
+            syllableLength <= availableTimePointLength
+          ) {
+            return;
+          }
+
+          const lastTimePoint: [StartTimePoint, EndTimePoint] =
+            Object.values(timePoints).slice(-1)[0];
+          const interval: Millisecond =
+            (lastTimePoint[1] - lastTimePoint[0]) /
+            (syllableLength - availableTimePointLength);
+
+          for (
+            let i = availableTimePointLength - 1, j = 0;
+            i < syllableLength;
+            i++, j++
+          ) {
+            timePointsRef.current[index][i] = [
+              lastTimePoint[0] + j * interval,
+              lastTimePoint[0] + (j + 1) * interval,
+            ];
+          }
+        });
+      }
+
+      const lyrics = linesRef.current
+        .map((line, index) => {
+          const timePoints = timePointsRef.current[index];
+          if (!timePoints) {
+            return line.join("");
+          }
+
+          const tps = Object.entries(timePoints);
+          const syllables: string[] = [];
+          for (let i = 0; i < line.length; i++) {
+            let syllable = line[i];
+            const st =
+              tps[i]?.[1]?.[0] !== undefined
+                ? Lyrics.toStringTimePoint(tps[i][1][0])
+                : "";
+            const et =
+              tps[i]?.[1]?.[1] !== undefined
+                ? Lyrics.toStringTimePoint(tps[i][1][1])
+                : "";
+            if (i === tps.length - 1) {
+              syllable = line.slice(i).join("");
+              i = line.length;
+            }
+            syllables.push(`${st}${syllable}${et}`);
+          }
+
+          return syllables.join("");
+        })
+        .join("\n");
+
+      const onExportInner = onExportArg || onExport;
+
+      if (onExportInner) {
+        onExportInner(lyrics, linesRef.current, timePointsRef.current);
+      } else {
+        let filename: string | null = `${fileNameRef.current || "lyrics"}.lrcp`;
+        filename = window.prompt("Filename", filename);
+        if (!filename) {
+          console.log("No filename, export cancelled");
+          return;
+        }
+        const blob = new Blob([lyrics], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${fileNameRef.current || "lyrics"}.lrcp`;
+        a.click();
+        a.remove();
+        handleBackToTop();
+      }
+    },
+    [handleBackToTop, linesRef, onExport],
+  );
 
   const handleTogglePlay = useCallback(() => {
     if (!audioRef.current) {
@@ -533,6 +538,34 @@ export default function LyricsCreator({
     ],
   );
 
+  const handleSeekBackward = useCallback(() => {
+    handleSeek(Backward);
+  }, [handleSeek]);
+
+  const handleSeekBackwardMore = useCallback(() => {
+    handleSeek(BackwardMore);
+  }, [handleSeek]);
+
+  const handleClearLine = useCallback(() => {
+    timePointsRef.current[lineIndexRef.current] = {};
+    setSyllableIndex(0);
+    handleSeekBackward();
+  }, [handleSeekBackward, lineIndexRef, setSyllableIndex]);
+
+  const handleRevokeLine = useCallback(() => {
+    timePointsRef.current[lineIndexRef.current] = {};
+    setSyllableIndex(0);
+    setLineIndex((i) => {
+      i = i - 1;
+      if (i < 0) {
+        i = 0;
+      }
+      timePointsRef.current[i] = {};
+      return i;
+    });
+    handleSeekBackward();
+  }, [handleSeekBackward, lineIndexRef, setLineIndex, setSyllableIndex]);
+
   useEffect(() => {
     if (!container) {
       return;
@@ -549,11 +582,11 @@ export default function LyricsCreator({
 
       switch (func) {
         case "Backward":
-          handleSeek(Backward);
+          handleSeekBackward();
           touched = true;
           break;
         case "BackwardMore":
-          handleSeek(BackwardMore);
+          handleSeekBackwardMore();
           touched = true;
           break;
         case "Forward":
@@ -571,9 +604,7 @@ export default function LyricsCreator({
           break;
 
         case "ClearLine":
-          timePointsRef.current[lineIndexRef.current] = {};
-          setSyllableIndex(0);
-          handleSeek(Backward);
+          handleClearLine();
           touched = true;
           break;
 
@@ -589,16 +620,7 @@ export default function LyricsCreator({
           break;
 
         case "RevokeLine":
-          timePointsRef.current[lineIndexRef.current] = {};
-          setSyllableIndex(0);
-          setLineIndex((i) => {
-            i = i - 1;
-            if (i < 0) {
-              i = 0;
-            }
-            timePointsRef.current[i] = {};
-            return i;
-          });
+          handleRevokeLine();
           touched = true;
           isKeyDownRef.current = true;
           break;
@@ -659,9 +681,13 @@ export default function LyricsCreator({
   }, [
     audioRef,
     container,
+    handleClearLine,
     handleNextSyllableKeyDown,
     handleNextSyllableKeyUp,
+    handleRevokeLine,
     handleSeek,
+    handleSeekBackward,
+    handleSeekBackwardMore,
     handleTogglePlay,
     lineIndexRef,
     scrollToCurrentLine,
@@ -760,9 +786,9 @@ export default function LyricsCreator({
     ),
   );
 
-  const enableTouchPad = useMemo(() => {
+  const [enableTouchPad, setEnableTouchPad] = useState<boolean>(() => {
     return window.ontouchstart !== undefined;
-  }, []);
+  });
 
   const handleTouchPadTouchDown = useCallback(() => {
     handleNextSyllableKeyDown();
@@ -771,6 +797,16 @@ export default function LyricsCreator({
   const handleTouchPadTouchUp = useCallback(() => {
     handleNextSyllableKeyUp("NextSyllable");
   }, [handleNextSyllableKeyUp]);
+
+  const handleSaveToClipboard = useCallback(() => {
+    handleExport((lyrics) => {
+      navigator.clipboard
+        .writeText(lyrics)
+        .catch((e: Error | unknown | undefined) => {
+          alert(`failed to save to clipboard: ${(e as Error)?.message || e}`);
+        });
+    });
+  }, [handleExport]);
 
   return (
     <div className={styles.wrapper}>
@@ -972,14 +1008,40 @@ export default function LyricsCreator({
         })}
       </div>
       <div className={styles.buttons}>
-        <button onClick={handleExport}>Export</button>
+        <button onClick={() => handleExport()}>Export</button>
+        <button onClick={handleSaveToClipboard}>Save to Clipboard</button>
+      </div>
+      <hr />
+      <div className={styles.touchpadEnableButtonWrapper}>
+        <button onClick={() => setEnableTouchPad((o) => !o)}>
+          {enableTouchPad ? "Hide" : "Show"} Touch Pad
+        </button>
+        {enableTouchPad && <div className={styles.touchpadPlaceholder}></div>}
       </div>
       {enableTouchPad && (
-        <TouchPad
-          className={styles.touchpad}
-          onTouchDown={handleTouchPadTouchDown}
-          onTouchUp={handleTouchPadTouchUp}
-        />
+        <div className={styles.touchpadWrapper}>
+          <div className={styles.touchButton} onClick={handleClearLine}>
+            ⬅️
+          </div>
+          <div className={styles.touchButton} onClick={handleRevokeLine}>
+            ⬆️
+          </div>
+          <div
+            className={styles.touchButton}
+            onMouseDown={() => handleNextSyllableKeyDown()}
+            onMouseUp={() => handleNextSyllableKeyUp("NextLine")}
+          >
+            ⬇️
+          </div>
+          <div className={styles.touchButton} onClick={handleTogglePlay}>
+            ⏸️
+          </div>
+          <TouchPad
+            className={styles.touchpad}
+            onTouchDown={handleTouchPadTouchDown}
+            onTouchUp={handleTouchPadTouchUp}
+          />
+        </div>
       )}
     </div>
   );
