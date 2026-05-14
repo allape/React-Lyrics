@@ -17,7 +17,9 @@ import Lyrics, {
   StartTimePoint,
   TimePoint,
 } from "../../core/lyrics.ts";
-import useRemoteTouchPad from "../../hook/useRemoteTouchPad.tsx";
+import useRemoteTouchPad, {
+  UseRemoteTouchPadProps,
+} from "../../hook/useRemoteTouchPad.tsx";
 import FileInput from "../FileInput";
 import TouchPad from "../TouchPad";
 import WaveForm from "../Waveform";
@@ -143,6 +145,8 @@ export const WordSplitterRegexps = {
   "Split By Space": /[^ ]+ */gi,
 };
 
+const hasTouchScreen = window.ontouchstart !== undefined;
+
 export interface ILyricsCreatorProps {
   text?: string;
   src?: string;
@@ -199,6 +203,9 @@ export default function LyricsCreator({
   const timePointsRef = useRef<TimePoints>({});
 
   const titleRef = useRef<HTMLHRElement | null>(null);
+
+  const [enableTouchPad, enableTouchPadRef, setEnableTouchPad] =
+    useProxy<boolean>(hasTouchScreen);
 
   const [spectrogram, spectrogramRef, setSpectrogram] =
     useProxy<boolean>(false);
@@ -465,11 +472,11 @@ export default function LyricsCreator({
     );
     if (ele) {
       (ele.nextElementSibling || ele).scrollIntoView({
-        behavior: "smooth",
+        behavior: enableTouchPadRef.current ? "instant" : "smooth",
         block: spectrogramRef.current ? "end" : "center",
       });
     }
-  }, [lineIndexRef, spectrogramRef]);
+  }, [enableTouchPadRef, lineIndexRef, spectrogramRef]);
 
   const isKeyDownRef = useRef(false);
   const keyDownTimeRef = useRef<Millisecond>(0);
@@ -538,6 +545,10 @@ export default function LyricsCreator({
     ],
   );
 
+  const handleSeekForward = useCallback(() => {
+    handleSeek(Forward);
+  }, [handleSeek]);
+
   const handleSeekBackward = useCallback(() => {
     handleSeek(Backward);
   }, [handleSeek]);
@@ -590,7 +601,7 @@ export default function LyricsCreator({
           touched = true;
           break;
         case "Forward":
-          handleSeek(Forward);
+          handleSeekForward();
           touched = true;
           break;
         case "ForwardMore":
@@ -688,6 +699,7 @@ export default function LyricsCreator({
     handleSeek,
     handleSeekBackward,
     handleSeekBackwardMore,
+    handleSeekForward,
     handleTogglePlay,
     lineIndexRef,
     scrollToCurrentLine,
@@ -768,7 +780,7 @@ export default function LyricsCreator({
     remoteTouchpadConnected,
     connect: handleRemoteTouchpadClick,
   } = useRemoteTouchPad(
-    useMemo(
+    useMemo<UseRemoteTouchPadProps>(
       () => ({
         execute,
         remoteTouchpadURL: remoteTouchpadURLFromProps,
@@ -785,10 +797,6 @@ export default function LyricsCreator({
       ],
     ),
   );
-
-  const [enableTouchPad, setEnableTouchPad] = useState<boolean>(() => {
-    return window.ontouchstart !== undefined;
-  });
 
   const handleTouchPadTouchDown = useCallback(() => {
     handleNextSyllableKeyDown();
@@ -1032,6 +1040,9 @@ export default function LyricsCreator({
             onMouseUp={() => handleNextSyllableKeyUp("NextLine")}
           >
             ⬇️
+          </div>
+          <div className={styles.touchButton} onClick={handleSeekForward}>
+            ⏩
           </div>
           <div className={styles.touchButton} onClick={handleTogglePlay}>
             ⏸️
