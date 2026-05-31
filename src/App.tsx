@@ -4,6 +4,7 @@ import styles from "./style.module.scss";
 import Demo from "./view/Demo";
 import LyricsCreatorDemo from "./view/LyricsCreatorDemo";
 import LyricsTimeLineDemo from "./view/LyricsTimeLineDemo";
+import Misc from "./view/Misc";
 import RemoteTouchpad from "./view/RemoteTouchpad";
 import SimplePlayer from "./view/SimplePlayer";
 import SyllableSwapper from "./view/SyllableSwapper";
@@ -16,7 +17,8 @@ type Route =
   | "lyrics-timeline"
   | "wave-compare"
   | "syllable-swapper"
-  | "remote-touchpad";
+  | "remote-touchpad"
+  | "misc";
 
 const Routers: ILV<Route>[] = [
   {
@@ -46,6 +48,10 @@ const Routers: ILV<Route>[] = [
   {
     label: "Remote Touchpad",
     value: "remote-touchpad",
+  },
+  {
+    label: "Misc.",
+    value: "misc",
   },
 ];
 
@@ -98,6 +104,7 @@ export default function App(): ReactElement {
         {route === "wave-compare" && <WaveCompareDemo />}
         {route === "syllable-swapper" && <SyllableSwapper />}
         {route === "remote-touchpad" && <RemoteTouchpad />}
+        {route === "misc" && <Misc />}
       </div>
     </div>
   );
