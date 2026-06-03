@@ -147,11 +147,9 @@ export default function Lyrics({
           if (indexes.includes(lineIndex)) {
             isCurrent = true;
           } else {
-            if (lineIndex < indexes[0]) {
-              distanceFromCurrent = indexes[0] - lineIndex;
-            } else {
-              distanceFromCurrent = lineIndex - indexes[indexes.length - 1];
-            }
+            distanceFromCurrent = Math.abs(
+              lineIndex - indexes[indexes.length - 1],
+            );
           }
 
           return (
