@@ -2,6 +2,12 @@ import { useProxy } from "@allape/use-loading";
 import { ReactElement, useCallback, useEffect } from "react";
 import styles from "./style.module.scss";
 
+const Presets: [RegExp, string][] = [
+  [/\[\d+:\d+\.\d+]/g, "[00:00.01]"],
+  [/\[(\d+:\d+)]/g, "[$1.00]"],
+  [/ (\[\d+:\d+\.\d+])/g, "\\n$1"],
+];
+
 export default function Replacer(): ReactElement {
   const [matcher, matcherRef, setMatcher] = useProxy<string>(
     "\\[\\d+:\\d+(\\.\\d+)?\\]",
@@ -35,7 +41,12 @@ export default function Replacer(): ReactElement {
 
     try {
       const regexp = new RegExp(matcherRef.current, "g");
-      setResult(sourceRef.current.replace(regexp, replacementRef.current));
+      setResult(
+        sourceRef.current.replace(
+          regexp,
+          replacementRef.current.replace(/\\n/g, "\n"),
+        ),
+      );
       return;
     } catch (e) {
       console.error(matcherRef.current, "is not a regexp:", e);
@@ -73,6 +84,19 @@ export default function Replacer(): ReactElement {
 
   return (
     <div className={styles.wrapper}>
+      <div>
+        {Presets.map((p, i) => (
+          <div
+            key={i}
+            onClick={() => {
+              setMatcher(p[0].source);
+              setReplacement(p[1]);
+            }}
+          >
+            <code>{p[0].source}</code> {"->"} <code>{p[1]}</code>
+          </div>
+        ))}
+      </div>
       <div className={styles.row}>
         <input
           className={styles.col}
