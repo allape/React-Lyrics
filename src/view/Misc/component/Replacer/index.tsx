@@ -6,6 +6,7 @@ const Presets: [RegExp, string][] = [
   [/\[\d+:\d+\.\d+]/g, "[00:00.01]"],
   [/\[(\d+:\d+)]/g, "[$1.00]"],
   [/ (\[\d+:\d+\.\d+])/g, "\\n$1"],
+  [/ ?\[[\d-]+]/g, ""],
 ];
 
 export default function Replacer(): ReactElement {
