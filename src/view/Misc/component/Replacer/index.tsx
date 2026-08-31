@@ -25,10 +25,10 @@ export default function Replacer(): ReactElement {
       return;
     }
 
-    if (!replacementRef.current) {
-      setResult("(Text to Replace is empty)");
-      return;
-    }
+    // if (!replacementRef.current) {
+    //   setResult("(Text to Replace is empty)");
+    //   return;
+    // }
 
     if (matcherRef.current === replacementRef.current) {
       setResult("(Text to Match and Text to Replace are the same)");
