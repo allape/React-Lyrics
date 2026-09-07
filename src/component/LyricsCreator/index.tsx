@@ -139,7 +139,9 @@ export type TimePoints = Record<number, Record<number, [TimePoint, TimePoint]>>;
 // eslint-disable-next-line react-refresh/only-export-components
 export const WordSplitterRegexps = {
   Default:
-    /([«¿¡(]?[-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.~«»/)]+|["“‘《(（]?\S[。，"”’)）》？！、～~.:：]*)\s*/gi,
+    // \u0E00-\u0E7F is for language Thai, for example "泰國恰恰"
+    // À-ÿА-Яа-яЁё is for European countries, for example "The Internationale"
+    /([«¿¡(]?[-\u0E00-\u0E7Fa-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.~«»/)]+|["“‘《(（]?\S[。，"”’)）》？！、～~.:：]*)\s*/gi,
   "Japanese Refined":
     /([«¿¡(]?[-a-zA-ZÀ-ÿА-Яа-яЁё'"¿?!¡,:;.»/)]+|["“‘《(（~]?\S[ぁぃぅぇぉっゃゅょゎゕゖァィゥェォッャュョヮヵヶーんン]*[。，"”’)）》？！、～~.:：]*)\s*/gi,
   "Split By Space": /[^ ]+ */gi,
