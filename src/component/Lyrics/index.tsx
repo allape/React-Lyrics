@@ -41,6 +41,10 @@ export interface ILyricsProps {
   current?: Millisecond;
   karaoke?: boolean;
   content?: string;
+  /**
+   * Only works when {@link karaoke} is true
+   */
+  highlightActiveSyllable?: boolean;
   classNames?: IClassNames;
   styles?: Partial<Record<"line" | "syllable" | "mask", CSSProperties>>;
   onChange?: (tp: TimePoint) => void;
@@ -52,6 +56,7 @@ export default function Lyrics({
   current = 0,
   karaoke,
   content,
+  highlightActiveSyllable = false,
   styles: stylesFromProps,
   classNames,
   onChange,
@@ -175,6 +180,9 @@ export default function Lyrics({
                     ? [styles.hasTrailingSpace, classNames?.hasTrailingSpace]
                     : []),
                 ];
+
+                const progress =
+                  (progresses[lineIndex]?.[syllableIndex] || 0) * 100;
                 return (
                   <div
                     key={`line${lineIndex}_s${syllableIndex}`}
@@ -182,7 +190,16 @@ export default function Lyrics({
                       styles.syllable,
                       classNames?.syllable,
                       karaoke && [styles.karaoke, classNames?.karaoke],
+                      progress >= 100 ? styles.fulfilled : undefined,
                     )}
+                    style={{
+                      ...(karaoke && highlightActiveSyllable
+                        ? {
+                            scale: `${100 + (progress < 100 ? progress / 2 : 0)}%`,
+                            transformOrigin: "50%",
+                          }
+                        : {}),
+                    }}
                   >
                     <div
                       className={cls(
@@ -203,9 +220,7 @@ export default function Lyrics({
                         )}
                         style={{
                           ...stylesFromProps?.mask,
-                          width: karaoke
-                            ? `${(progresses[lineIndex]?.[syllableIndex] || 0) * 100}%`
-                            : "100%",
+                          width: `${progress}%`,
                         }}
                       >
                         {i.text}

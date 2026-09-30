@@ -1,5 +1,9 @@
-@mixin AnimationTransition {
-  transition: opacity 0.25s, scale 0.25s;
+@mixin ScaleAnimationTransition {
+  transition: scale 0.25s;
+}
+
+@mixin OpacityAnimationTransition {
+  transition: opacity 0.25s;
 }
 
 .wrapper {
@@ -13,7 +17,7 @@
     padding: 0 10px;
 
     .line {
-      @include AnimationTransition;
+      @include ScaleAnimationTransition;
       margin: 30px 0;
       font-size: 20px;
       cursor: pointer;
@@ -27,15 +31,15 @@
       & {
         .syllable {
           opacity: 0.2;
-          @include AnimationTransition;
+          @include OpacityAnimationTransition;
 
           &.karaoke {
             opacity: 0.4;
-            @include AnimationTransition;
+            @include OpacityAnimationTransition;
 
             .underlying {
               opacity: 0.4;
-              @include AnimationTransition;
+              @include OpacityAnimationTransition;
             }
           }
         }
@@ -116,6 +120,10 @@
           .mask {
             display: none;
           }
+        }
+
+        &.fulfilled {
+          @include ScaleAnimationTransition;
         }
 
         &.karaoke {
