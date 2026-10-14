@@ -52,7 +52,10 @@ export default function WaveForm({
       plugins: [regionPlugin],
       ...options,
     });
-    s.getMediaElement().style.marginTop = "10px";
+    const media = s.getMediaElement();
+    if (media) {
+      media.style.marginTop = "10px";
+    }
 
     if (hover) {
       s.registerPlugin(

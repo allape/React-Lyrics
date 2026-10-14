@@ -1,4 +1,5 @@
-import Lyrics from '../src/core/lyrics';
+import { describe, expect, test } from "vitest";
+import Lyrics from "../lyrics";
 
 /**
  * @see https://guoyunhe.github.io/rabbit-lyrics
@@ -22,7 +23,7 @@ const ExampleLRC = `
 [00:21.10][00:45.10]Repeating lyrics (e.g. chorus)
 ...
 [mm:ss.xx]Last lyrics line
-`
+`;
 
 describe("test lyrics", () => {
   test("mmssSSSS", async () => {
@@ -75,8 +76,12 @@ describe("test lyrics", () => {
     expect(l.getLineIndexesByTimePoint(2_000)[0]).toBe(0);
     expect(l.getLineIndexesByTimePoint(17_000)[0]).toBe(5);
 
-    expect(l.getLineStringsByTimePoint(2_000)[0]).toBe(" 谁のことを考えてるの?");
-    expect(l.getLineStringsByTimePoint(17_000)[0]).toBe(" アイツの心に 居场所がないんだ");
+    expect(l.getLineStringsByTimePoint(2_000)[0]).toBe(
+      " 谁のことを考えてるの?",
+    );
+    expect(l.getLineStringsByTimePoint(17_000)[0]).toBe(
+      " アイツの心に 居场所がないんだ",
+    );
 
     expect(l.getLineIndexesByTimePoint(-1).length).toBe(0);
     expect(l.getLineIndexesByTimePoint(-999).length).toBe(0);
@@ -86,7 +91,7 @@ describe("test lyrics", () => {
   test("parseLRC", () => {
     const l1 = Lyrics.parseStandardLRC(ExampleLRC);
 
-    expect(l1.lines.length).toBe(4)
+    expect(l1.lines.length).toBe(4);
     expect(l1.lines[0].st).toBe(12_000);
     expect(l1.lines[3].st).toBe(45_100);
 
@@ -95,6 +100,5 @@ describe("test lyrics", () => {
     expect(l1.getLineIndexesByTimePoint(22_000)[0]).toBe(2);
     expect(l1.getLineIndexesByTimePoint(46_000)[0]).toBe(3);
     expect(l1.getLineIndexesByTimePoint(50_000)[0]).toBe(3);
-  })
+  });
 });
-
