@@ -158,6 +158,7 @@ export interface ILyricsCreatorProps {
   useDoubleSpaceSeparate?: boolean;
   remoteTouchpadURL?: string;
   remoteTouchpadClientID?: string;
+  remoteTouchpadIceServers?: RTCIceServer[];
   onExport?: (
     lyrics: string,
     lines: string[][],
@@ -174,6 +175,7 @@ export default function LyricsCreator({
   useDoubleSpaceSeparate: useDoubleSpaceSeparateFromProps,
   remoteTouchpadURL: remoteTouchpadURLFromProps,
   remoteTouchpadClientID: remoteTouchpadClientIDFromProps,
+  remoteTouchpadIceServers: remoteTouchpadIceServersFromProps,
   onExport,
 }: ILyricsCreatorProps): ReactElement {
   const { loading, execute } = useLoading();
@@ -498,7 +500,7 @@ export default function LyricsCreator({
   );
 
   const handleNextSyllableKeyUp = useCallback(
-    (nextOp?: KeyFunction | null) => {
+    (nextOp?: KeyFunction | null, timeOffset: Millisecond = 0) => {
       if (!isKeyDownRef.current || !audioRef.current) {
         return;
       }
@@ -509,7 +511,7 @@ export default function LyricsCreator({
         ...timePointsRef.current[lineIndexRef.current],
         [syllableIndexRef.current]: [
           Math.max(ZeroTimeReplaceTo, keyDownTimeRef.current),
-          Math.max(ZeroTimeReplaceTo, audioRef.current.currentTime * 1000),
+          Math.max(ZeroTimeReplaceTo, audioRef.current.currentTime * 1000 + timeOffset),
         ],
       };
 
@@ -780,6 +782,7 @@ export default function LyricsCreator({
     remoteTouchpadClientID,
     setRemoteTouchpadClientID,
     remoteTouchpadConnected,
+    remoteTouchpadWebRTCConnected,
     connect: handleRemoteTouchpadClick,
   } = useRemoteTouchPad(
     useMemo<UseRemoteTouchPadProps>(
@@ -787,14 +790,16 @@ export default function LyricsCreator({
         execute,
         remoteTouchpadURL: remoteTouchpadURLFromProps,
         remoteTouchpadClientID: remoteTouchpadClientIDFromProps,
+        remoteTouchpadIceServers: remoteTouchpadIceServersFromProps,
         onTouchDown: handleNextSyllableKeyDown,
-        onTouchUp: () => handleNextSyllableKeyUp("NextSyllable"),
+        onTouchUp: (offset) => handleNextSyllableKeyUp("NextSyllable", offset),
       }),
       [
         execute,
         handleNextSyllableKeyDown,
         handleNextSyllableKeyUp,
         remoteTouchpadClientIDFromProps,
+        remoteTouchpadIceServersFromProps,
         remoteTouchpadURLFromProps,
       ],
     ),
@@ -892,7 +897,17 @@ export default function LyricsCreator({
           value={remoteTouchpadClientID}
           onChange={(e) => setRemoteTouchpadClientID(e.target.value)}
         />
-        <button disabled={loading} onClick={handleRemoteTouchpadClick}>
+        <button
+          disabled={loading}
+          title={
+            remoteTouchpadConnected
+              ? remoteTouchpadWebRTCConnected
+                ? "WebRTC data channel connected"
+                : "Signalling connected, using MQTT fallback until WebRTC is ready"
+              : "Connect to remote touchpad"
+          }
+          onClick={handleRemoteTouchpadClick}
+        >
           {remoteTouchpadConnected ? "Disconnect" : "Connect"}
         </button>
       </div>

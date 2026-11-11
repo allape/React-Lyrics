@@ -16,6 +16,7 @@ export default function LyricsCreatorDemo(): ReactElement {
     text: textFromProps,
     remoteTouchpadURL,
     remoteTouchpadClientID,
+    remoteTouchpadIceServers,
   } = useParamsFromSearchParams();
 
   const [src, setSrc] = useState<string | undefined>(undefined);
@@ -85,6 +86,7 @@ export default function LyricsCreatorDemo(): ReactElement {
         useDoubleSpaceSeparate={useDoubleSpaceSeparate}
         remoteTouchpadURL={remoteTouchpadURL}
         remoteTouchpadClientID={remoteTouchpadClientID}
+        remoteTouchpadIceServers={remoteTouchpadIceServers}
       />
     </div>
   );

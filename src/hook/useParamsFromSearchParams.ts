@@ -1,19 +1,25 @@
 import { useEffect, useState } from "react";
+import { parseRemoteTouchpadIceServers } from "../core/remoteTouchpad.ts";
 
 export interface ParamsFromSearchParamsReturn {
   src?: string;
   text?: string;
   remoteTouchpadURL?: string;
   remoteTouchpadClientID?: string;
+  remoteTouchpadIceServers?: RTCIceServer[];
 }
 
 export default function useParamsFromSearchParams(): ParamsFromSearchParamsReturn {
-  const [src, setSrc] = useState<ParamsFromSearchParamsReturn["src"]>(undefined);
-  const [text, setText] = useState<ParamsFromSearchParamsReturn["text"]>(undefined);
+  const [src, setSrc] =
+    useState<ParamsFromSearchParamsReturn["src"]>(undefined);
+  const [text, setText] =
+    useState<ParamsFromSearchParamsReturn["text"]>(undefined);
   const [remoteTouchpadURL, setRemoteTouchpadURL] =
     useState<ParamsFromSearchParamsReturn["remoteTouchpadURL"]>();
   const [remoteTouchpadClientID, setRemoteTouchpadClientID] =
     useState<ParamsFromSearchParamsReturn["remoteTouchpadClientID"]>();
+  const [remoteTouchpadIceServers, setRemoteTouchpadIceServers] =
+    useState<ParamsFromSearchParamsReturn["remoteTouchpadIceServers"]>();
 
   useEffect(() => {
     const handleHashChange = async () => {
@@ -32,6 +38,9 @@ export default function useParamsFromSearchParams(): ParamsFromSearchParamsRetur
 
       setRemoteTouchpadURL(sp.get("remoteTouchpadURL") || undefined);
       setRemoteTouchpadClientID(sp.get("remoteTouchpadClientID") || undefined);
+      setRemoteTouchpadIceServers(
+        parseRemoteTouchpadIceServers(sp.get("remoteTouchpadIceServers")),
+      );
     };
 
     handleHashChange().then();
@@ -43,5 +52,11 @@ export default function useParamsFromSearchParams(): ParamsFromSearchParamsRetur
     };
   }, []);
 
-  return { src, text, remoteTouchpadURL, remoteTouchpadClientID };
+  return {
+    src,
+    text,
+    remoteTouchpadURL,
+    remoteTouchpadClientID,
+    remoteTouchpadIceServers,
+  };
 }
