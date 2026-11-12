@@ -88,6 +88,26 @@ describe("test lyrics", () => {
     expect(l.getLineIndexesByTimePoint(999_999_999)[0]).toBe(5);
   });
 
+  test("comment", () => {
+    const l = Lyrics.parse(
+      ["[00:12.00]Line 1", "[00:12.00]Line 2", "[00:17.20]Line 3"].join("\n"),
+    );
+
+    expect(l.lines.length).toBe(3);
+    expect(l.lines[0].st).toBe(l.lines[0].et);
+    expect(l.lines[0].comment).toBe(true);
+
+    expect(l.lines[1].comment).toBe(false);
+    expect(l.lines[2].comment).toBe(false);
+
+    // comment is a logical field, so it follows changes of st / et
+    l.lines[0].et += 1;
+    expect(l.lines[0].comment).toBe(false);
+
+    l.lines[1].et = l.lines[1].st;
+    expect(l.lines[1].comment).toBe(true);
+  });
+
   test("parseLRC", () => {
     const l1 = Lyrics.parseStandardLRC(ExampleLRC);
 

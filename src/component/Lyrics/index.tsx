@@ -69,6 +69,7 @@ export default function Lyrics({
   const [progresses, setProgresses] = useState<Record<LineIndex, Progress[]>>(
     () => ({}),
   );
+  const [commentLines, setCommentLines] = useState<boolean[]>([]);
   const [container, setContainer] = useState<HTMLElement | null>(null);
 
   const [lyricsDriver, setLyricsDriver] = useState<LyricsDriver | null>(null);
@@ -76,6 +77,7 @@ export default function Lyrics({
   useEffect(() => {
     if (!content) {
       setLyricsDriver(null);
+      setCommentLines([]);
       return;
     }
     const driver = LyricsDriver.parse(content);
@@ -86,6 +88,7 @@ export default function Lyrics({
     }
     driver.glueLine();
     setLyricsDriver(driver);
+    setCommentLines(driver.lines.map((line) => line.comment));
     onDriverChange?.(driver);
   }, [content, karaoke, onDriverChange]);
 
@@ -118,7 +121,7 @@ export default function Lyrics({
       performance.now() - lastScrollIntoTime.current > ScrollIntoThreshold
     ) {
       const line = container.querySelector(
-        `[data-lyrics=index-${indexes[indexes.length - 1]}]`,
+        `[data-lyrics=index-${indexes[Math.floor(indexes.length / 2)]}]`,
       );
       if (line) {
         line.scrollIntoView({
@@ -134,6 +137,34 @@ export default function Lyrics({
     lastInteractTime.current = performance.now();
   }, []);
 
+  const handleClickLine = useCallback(
+    (lineIndex: LineIndex) => {
+      if (!lyricsDriver) {
+        return;
+      }
+
+      let targetIndex = lineIndex;
+
+      if (commentLines[lineIndex]) {
+        targetIndex = -1;
+        // A comment line should seek to the first non-comment line above it.
+        for (let i = lineIndex - 1; i >= 0; i--) {
+          if (!commentLines[i]) {
+            targetIndex = i;
+            break;
+          }
+        }
+      }
+
+      if (targetIndex < 0) {
+        return;
+      }
+
+      onChange?.(lyricsDriver.lines[targetIndex].st + offset);
+    },
+    [commentLines, lyricsDriver, offset, onChange],
+  );
+
   return (
     <div
       ref={setContainer}
@@ -146,10 +177,11 @@ export default function Lyrics({
       <div className={cls(styles.placeholder, classNames?.placeholder)}></div>
       <div className={cls(styles.lines, classNames?.lines)}>
         {lyricsDriver?.lines.map((l, lineIndex) => {
+          const isComment = !!commentLines[lineIndex];
           let isCurrent = false;
           let distanceFromCurrent = 0;
 
-          if (indexes.includes(lineIndex)) {
+          if (!isComment && indexes.includes(lineIndex)) {
             isCurrent = true;
           } else {
             distanceFromCurrent = Math.abs(
@@ -164,11 +196,11 @@ export default function Lyrics({
                 styles.line,
                 classNames?.line,
                 isCurrent && [styles.current, classNames?.current],
-                styles[`current${distanceFromCurrent}`],
-                classNames?.currentx?.[distanceFromCurrent],
+                !isComment && styles[`current${distanceFromCurrent}`],
+                !isComment && classNames?.currentx?.[distanceFromCurrent],
               )}
               data-lyrics={`index-${lineIndex}`}
-              onClick={() => onChange?.(l.st + offset)}
+              onClick={() => handleClickLine(lineIndex)}
               style={stylesFromProps?.line}
             >
               {l.syllables.map((i, syllableIndex) => {
@@ -189,11 +221,12 @@ export default function Lyrics({
                     className={cls(
                       styles.syllable,
                       classNames?.syllable,
-                      karaoke && [styles.karaoke, classNames?.karaoke],
+                      karaoke &&
+                        !isComment && [styles.karaoke, classNames?.karaoke],
                       progress >= 100 ? styles.fulfilled : undefined,
                     )}
                     style={{
-                      ...(karaoke && highlightActiveSyllable
+                      ...(karaoke && !isComment && highlightActiveSyllable
                         ? {
                             scale: `${100 + (progress < 100 ? progress / 2 : 0)}%`,
                             transformOrigin: "50%",
@@ -211,7 +244,7 @@ export default function Lyrics({
                     >
                       {i.text}
                     </div>
-                    {karaoke && (
+                    {karaoke && !isComment && (
                       <div
                         className={cls(
                           styles.mask,

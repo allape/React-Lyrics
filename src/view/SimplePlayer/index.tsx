@@ -15,21 +15,25 @@ import useRAFAudioTime from "../../hook/useRAFAudioTime.ts";
 import useParamsFromSearchParams from "../../hook/useParamsFromSearchParams.ts";
 import styles from "./style.module.scss";
 
+export type Mode = "normal" | "karaoke";
+
 export interface ISimplePlayerProps {
   url?: string;
-  karaoke?: boolean;
+  mode?: Mode;
   content?: string;
 }
 
 export default function SimplePlayer({
   url: urlFromProps,
-  karaoke = true,
+  mode: modeFromProps,
   content,
 }: ISimplePlayerProps): ReactElement {
   const [audio, audioRef, setAudio] = useProxy<HTMLAudioElement | null>(null);
 
   const [url, setUrl] = useState<string | undefined>(urlFromProps);
   const [text, setText] = useState<string | undefined>(content);
+
+  const [mode, setMode] = useState<"normal" | "karaoke">(modeFromProps || "karaoke");
 
   const { src: srcFromSP, text: textFromSP } = useParamsFromSearchParams();
 
@@ -44,6 +48,14 @@ export default function SimplePlayer({
       setText(textFromSP);
     }
   }, [setText, textFromSP]);
+
+  useEffect(() => {
+    if (modeFromProps) {
+      setMode(modeFromProps);
+    } else {
+      setMode("karaoke");
+    }
+  }, [modeFromProps]);
 
   const [current] = useRAFAudioTime(audio);
 
@@ -108,11 +120,17 @@ export default function SimplePlayer({
           <hr />
         </>
       )}
+      {!modeFromProps && (
+        <select value={mode} onChange={(e) => setMode(e.target.value as "normal" | "karaoke")}>
+          <option value="normal">Normal</option>
+          <option value="karaoke">Karaoke</option>
+        </select>
+      )}
       <audio ref={setAudio} className={styles.audio} src={url} controls></audio>
       <Lyrics
         current={current}
         content={text}
-        karaoke={karaoke}
+        karaoke={mode === "karaoke"}
         onChange={handleChange}
         onDriverChange={handleDriverChange}
       />

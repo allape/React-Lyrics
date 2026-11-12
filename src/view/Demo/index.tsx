@@ -31,7 +31,7 @@ export default function Demo(): ReactElement {
 
   return (
     <div className={styles.wrapper}>
-      <SimplePlayer url={SRC} karaoke={karaoke} content={content} />
+      <SimplePlayer url={SRC} mode={karaoke ? "karaoke" : "normal"} content={content} />
       <select
         className={styles.selector}
         value={content}

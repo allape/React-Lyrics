@@ -16,10 +16,24 @@ export type Syllable = {
 export type Line = {
   rap?: boolean;
   harmony?: boolean;
+  /**
+   * A logical field derived from `st` and `et` instead of being stored.
+   * A line whose start time point equals its end time point is a comment line.
+   */
+  readonly comment: boolean;
   st: StartTimePoint;
   et: EndTimePoint;
   syllables: Syllable[];
 };
+
+function createLine(line: Omit<Line, "comment">): Line {
+  return {
+    ...line,
+    get comment(): boolean {
+      return this.st === this.et;
+    },
+  };
+}
 
 export type Progress = 0 | 1 | number;
 
@@ -105,22 +119,24 @@ export default class Lyrics {
         const ls: TimePoint = cLine.st - indicatorsDuration;
         const le: TimePoint = cLine.st;
         if (fillRestGapWith) {
-          newLines.push({
-            st: lastEtp,
-            et: ls,
-            syllables: [
-              {
-                st: lastEtp,
-                et: ls,
-                ...Lyrics.partialSyllableFromText(fillRestGapWith),
-              },
-            ],
-          });
+          newLines.push(
+            createLine({
+              st: lastEtp,
+              et: ls,
+              syllables: [
+                {
+                  st: lastEtp,
+                  et: ls,
+                  ...Lyrics.partialSyllableFromText(fillRestGapWith),
+                },
+              ],
+            }),
+          );
         }
 
         if (indicators.length > 0) {
           newLines.push(
-            {
+            createLine({
               st: ls,
               et: le,
               syllables: indicators.map((i, index) => {
@@ -132,7 +148,7 @@ export default class Lyrics {
                   ...Lyrics.partialSyllableFromText(i),
                 };
               }),
-            },
+            }),
             cLine,
           );
         } else {
@@ -297,13 +313,15 @@ export default class Lyrics {
         }
       }
 
-      lyrics.lines.push({
-        harmony: line.startsWith("harmony:"),
-        rap: line.startsWith("rap:"),
-        st: lineStp,
-        et: lineEtp,
-        syllables: syllables,
-      });
+      lyrics.lines.push(
+        createLine({
+          harmony: line.startsWith("harmony:"),
+          rap: line.startsWith("rap:"),
+          st: lineStp,
+          et: lineEtp,
+          syllables: syllables,
+        }),
+      );
     }
 
     // sort by start time point asc
