@@ -157,6 +157,7 @@ export default function Lyrics({
       }
 
       if (targetIndex < 0) {
+        onChange?.(0);
         return;
       }
 
